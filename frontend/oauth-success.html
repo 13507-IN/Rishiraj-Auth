@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OAuth Success</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="container">
+    <section class="card">
+      <h2>OAuth Success</h2>
+      <p>Your tokens are now available. Copy them and store securely.</p>
+      <pre id="tokens" class="result"></pre>
+      <a href="/">Back to Developer Console</a>
+    </section>
+  </main>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const accessToken = params.get('accessToken');
+    const refreshToken = params.get('refreshToken');
+    const output = document.getElementById('tokens');
+
+    if (accessToken && refreshToken) {
+      output.textContent = `Access Token:\n${accessToken}\n\nRefresh Token:\n${refreshToken}`;
+    } else {
+      output.textContent = 'Tokens missing from redirect. Please log in again.';
+    }
+  </script>
+</body>
+</html>

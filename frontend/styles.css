@@ -1,0 +1,359 @@
+:root {
+  --bg: #0a0a10;
+  --bg-accent: #121826;
+  --card: #151a22;
+  --card-border: rgba(255, 255, 255, 0.06);
+  --accent: #ffb86b;
+  --accent-strong: #ff9a3d;
+  --text: #f6f4ff;
+  --muted: #a7b0c0;
+  --success: #7ee081;
+  --danger: #ff6b6b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  color: var(--text);
+  background: radial-gradient(circle at top, #1f2233, #0a0a10 60%);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.bg-orb {
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.5;
+  z-index: 0;
+}
+
+.bg-orb-one {
+  background: #5f82ff;
+  top: -160px;
+  left: -120px;
+}
+
+.bg-orb-two {
+  background: #ff7b5f;
+  bottom: -200px;
+  right: -140px;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 48px 24px 96px;
+}
+
+.hero {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+
+.hero h1 {
+  font-size: clamp(2.4rem, 4vw, 3.3rem);
+  margin: 0 0 12px;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--muted);
+  max-width: 560px;
+}
+
+.status-card {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--card-border);
+  padding: 18px;
+  border-radius: 16px;
+  min-width: 260px;
+  backdrop-filter: blur(10px);
+}
+
+.status-label {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 8px 0 6px;
+}
+
+.status-input {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--card-border);
+  padding: 10px 12px;
+  background: rgba(8, 10, 15, 0.75);
+  color: var(--text);
+  font-family: "JetBrains Mono", "Consolas", monospace;
+  font-size: 0.8rem;
+}
+
+.workflow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.workflow-step {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: var(--muted);
+}
+
+.workflow-step span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 184, 107, 0.2);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.workflow-step p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  padding: 26px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  animation: rise 0.6s ease both;
+}
+
+.step-header {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.step-header h2 {
+  margin: 0 0 6px;
+  font-size: 1.6rem;
+}
+
+.step-header p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.step-badge {
+  background: rgba(255, 184, 107, 0.2);
+  color: var(--accent);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+label {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+  color: var(--muted);
+}
+
+input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: #0f1320;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+input:focus {
+  outline: none;
+  border-color: rgba(255, 184, 107, 0.7);
+  box-shadow: 0 0 0 2px rgba(255, 184, 107, 0.2);
+}
+
+.input-with-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input-with-toggle input {
+  flex: 1;
+}
+
+button.toggle {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--card-border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+button {
+  border: none;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+}
+
+button.primary {
+  background: linear-gradient(120deg, var(--accent), var(--accent-strong));
+  color: #1b1b1b;
+}
+
+button.ghost {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text);
+}
+
+button:hover {
+  transform: translateY(-1px);
+  transition: 0.2s ease;
+}
+
+.services {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.services label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--card-border);
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+}
+
+.result {
+  background: #0d1018;
+  border-radius: 12px;
+  padding: 14px;
+  color: var(--accent);
+  margin-top: 16px;
+  white-space: pre-wrap;
+  font-family: "JetBrains Mono", "Consolas", monospace;
+  font-size: 0.85rem;
+}
+
+.keys-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.key-card {
+  background: rgba(15, 18, 28, 0.8);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.key-card h3 {
+  margin: 0;
+}
+
+.key-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: "JetBrains Mono", "Consolas", monospace;
+  font-size: 0.85rem;
+}
+
+.docs-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  margin-bottom: 12px;
+}
+
+.muted-note {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 720px) {
+  .hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .status-card {
+    width: 100%;
+  }
+
+  .input-with-toggle {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
