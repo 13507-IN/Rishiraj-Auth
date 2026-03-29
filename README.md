@@ -56,6 +56,11 @@ Production-ready authentication and authorization server with JWT, RBAC, Google 
 - Email verification and password reset are implemented with hashed, time-limited tokens.
 - Redis fallback can be enabled in development using `REDIS_REQUIRED=false`.
 - API keys are shown once on creation. Only metadata + last 4 digits are listable later.
+- Frontend pages: `/` (home), `/console.html` (developer console), `/docs.html` (integration docs).
+
+## Middleware Quick Start
+
+Set `AUTH_SYSTEM_URL`, then copy the middleware from `/docs.html#middleware` to protect your services with API keys.
 
 ## API Key Usage
 

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Developer Console | Auth-System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg-orb bg-orb-one"></div>
+  <div class="bg-orb bg-orb-two"></div>
+
+  <main class="container">
+    <nav class="nav">
+      <div class="brand">
+        <span>Auth-System</span>
+        <span class="tag">Developer Console</span>
+      </div>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/console.html" class="active">Console</a>
+        <a href="/docs.html">Docs</a>
+      </div>
+    </nav>
+
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Auth-System</p>
+        <h1>Developer Console</h1>
+        <p class="subtitle">Register your tenant, verify your email, log in, and generate API keys without leaving the browser.</p>
+      </div>
+      <div class="status-card">
+        <p class="status-label">Current Tenant ID</p>
+        <input id="currentTenant" class="status-input" type="text" placeholder="Not set yet" readonly />
+        <p class="status-label">Current Access Token</p>
+        <input id="currentAccess" class="status-input" type="text" placeholder="Not set yet" readonly />
+      </div>
+    </header>
+
+    <section class="workflow">
+      <div class="workflow-step">
+        <span>1</span>
+        <p>Register tenant</p>
+      </div>
+      <div class="workflow-step">
+        <span>2</span>
+        <p>Verify email</p>
+      </div>
+      <div class="workflow-step">
+        <span>3</span>
+        <p>Login</p>
+      </div>
+      <div class="workflow-step">
+        <span>4</span>
+        <p>Create API key</p>
+      </div>
+      <div class="workflow-step">
+        <span>5</span>
+        <p>Google OAuth</p>
+      </div>
+    </section>
+
+    <section class="card step-card">
+      <div class="step-header">
+        <span class="step-badge">Step 1</span>
+        <div>
+          <h2>Register</h2>
+          <p>Create a new account and tenant. You will get the Tenant ID immediately.</p>
+        </div>
+      </div>
+      <div class="field-grid">
+        <div>
+          <label>Email</label>
+          <input id="regEmail" type="email" placeholder="name@company.com" />
+        </div>
+        <div>
+          <label>Password</label>
+          <div class="input-with-toggle">
+            <input id="regPassword" type="password" placeholder="Minimum 8 characters" />
+            <button class="toggle" type="button" data-toggle="regPassword">Show</button>
+          </div>
+        </div>
+      </div>
+      <div class="field-grid">
+        <div>
+          <label>Tenant Name</label>
+          <input id="regTenantName" type="text" placeholder="Acme Inc" />
+        </div>
+        <div>
+          <label>Existing Tenant ID (optional)</label>
+          <input id="regTenantId" type="text" placeholder="UUID if joining" />
+        </div>
+      </div>
+      <div class="action-row">
+        <button id="registerBtn" class="primary">Register</button>
+        <button id="copyTenantId" class="ghost" type="button">Copy Tenant ID</button>
+        <button id="copyVerifyToken" class="ghost" type="button">Copy Verify Token</button>
+      </div>
+      <pre id="registerResult" class="result"></pre>
+    </section>
+
+    <section class="card step-card">
+      <div class="step-header">
+        <span class="step-badge">Step 2</span>
+        <div>
+          <h2>Verify Email</h2>
+          <p>Paste the verification token and activate the account.</p>
+        </div>
+      </div>
+      <div class="field-grid">
+        <div>
+          <label>Verification Token</label>
+          <input id="verifyToken" type="text" placeholder="Paste token" />
+        </div>
+      </div>
+      <div class="action-row">
+        <button id="verifyBtn" class="primary">Verify Email</button>
+      </div>
+      <pre id="verifyResult" class="result"></pre>
+    </section>
+
+    <section class="card step-card">
+      <div class="step-header">
+        <span class="step-badge">Step 3</span>
+        <div>
+          <h2>Login</h2>
+          <p>Get access + refresh tokens for API key creation and protected routes.</p>
+        </div>
+      </div>
+      <div class="field-grid">
+        <div>
+          <label>Email</label>
+          <input id="loginEmail" type="email" placeholder="name@company.com" />
+        </div>
+        <div>
+          <label>Password</label>
+          <div class="input-with-toggle">
+            <input id="loginPassword" type="password" placeholder="Your password" />
+            <button class="toggle" type="button" data-toggle="loginPassword">Show</button>
+          </div>
+        </div>
+      </div>
+      <div class="action-row">
+        <button id="loginBtn" class="primary">Login</button>
+        <button id="copyAccessToken" class="ghost" type="button">Copy Access Token</button>
+      </div>
+      <pre id="loginResult" class="result"></pre>
+    </section>
+
+    <section class="card step-card">
+      <div class="step-header">
+        <span class="step-badge">Step 4</span>
+        <div>
+          <h2>Create API Key</h2>
+          <p>Select services and mint a new API key for your tenant.</p>
+        </div>
+      </div>
+      <div>
+        <label>Access Token</label>
+        <div class="input-with-toggle">
+          <input id="accessToken" type="password" placeholder="Paste access token" />
+          <button class="toggle" type="button" data-toggle="accessToken">Show</button>
+        </div>
+      </div>
+      <div>
+        <label>Key Name</label>
+        <input id="keyName" type="text" placeholder="Production key" />
+      </div>
+      <div class="services">
+        <label><input type="checkbox" value="auth" /> Auth</label>
+        <label><input type="checkbox" value="users" /> Users</label>
+        <label><input type="checkbox" value="billing" /> Billing</label>
+        <label><input type="checkbox" value="analytics" /> Analytics</label>
+      </div>
+      <div>
+        <label>Latest API Key (shown once)</label>
+        <div class="input-with-toggle">
+          <input id="createdApiKey" type="password" placeholder="Generated key will appear here" readonly />
+          <button class="toggle" type="button" data-toggle="createdApiKey">Show</button>
+        </div>
+      </div>
+      <div class="action-row">
+        <button id="createKey" class="primary">Generate API Key</button>
+        <button id="copyApiKey" class="ghost" type="button">Copy API Key</button>
+      </div>
+      <pre id="result" class="result"></pre>
+    </section>
+
+    <section class="card step-card">
+      <div class="step-header">
+        <span class="step-badge">Step 4B</span>
+        <div>
+          <h2>Saved API Keys</h2>
+          <p>List all API keys created for this account. Raw keys are only shown once.</p>
+        </div>
+      </div>
+      <div class="action-row">
+        <button id="loadKeys" class="primary">Load My API Keys</button>
+      </div>
+      <div id="keysList" class="keys-list"></div>
+    </section>
+
+    <section class="card step-card">
+      <div class="step-header">
+        <span class="step-badge">Step 5</span>
+        <div>
+          <h2>Google OAuth (Optional)</h2>
+          <p>Authenticate with Google using your Tenant ID.</p>
+        </div>
+      </div>
+      <div class="field-grid">
+        <div>
+          <label>Tenant ID</label>
+          <input id="tenantId" type="text" placeholder="Tenant ID" />
+        </div>
+      </div>
+      <div class="action-row">
+        <button id="googleLogin" class="primary">Login with Google</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Auth-System Developer Console</title>
+  <title>Auth-System</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -14,219 +14,64 @@
   <div class="bg-orb bg-orb-two"></div>
 
   <main class="container">
-    <header class="hero">
+    <nav class="nav">
+      <div class="brand">
+        <span>Auth-System</span>
+        <span class="tag">Developer Console</span>
+      </div>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/console.html">Console</a>
+        <a href="/docs.html">Docs</a>
+      </div>
+    </nav>
+
+    <section class="hero hero-split">
       <div>
-        <p class="eyebrow">Auth-System</p>
-        <h1>Developer Console</h1>
-        <p class="subtitle">Register your tenant, verify your email, log in, and generate API keys without leaving the browser.</p>
+        <p class="eyebrow">Multi-tenant Auth Platform</p>
+        <h1>Ship secure auth with one API key.</h1>
+        <p class="subtitle">Register a tenant, verify, login, and plug our drop-in middleware into your backend. Your team can be live in minutes.</p>
+        <div class="action-row">
+          <a class="primary-link" href="/console.html">Open Developer Console</a>
+          <a class="ghost-link" href="/docs.html">Read Integration Docs</a>
+        </div>
       </div>
       <div class="status-card">
-        <p class="status-label">Current Tenant ID</p>
-        <input id="currentTenant" class="status-input" type="text" placeholder="Not set yet" readonly />
-        <p class="status-label">Current Access Token</p>
-        <input id="currentAccess" class="status-input" type="text" placeholder="Not set yet" readonly />
-      </div>
-    </header>
-
-    <section class="workflow">
-      <div class="workflow-step">
-        <span>1</span>
-        <p>Register tenant</p>
-      </div>
-      <div class="workflow-step">
-        <span>2</span>
-        <p>Verify email</p>
-      </div>
-      <div class="workflow-step">
-        <span>3</span>
-        <p>Login</p>
-      </div>
-      <div class="workflow-step">
-        <span>4</span>
-        <p>Create API key</p>
-      </div>
-      <div class="workflow-step">
-        <span>5</span>
-        <p>Google OAuth</p>
+        <p class="status-label">Quick Links</p>
+        <a class="quick-link" href="/console.html">Create tenant and API keys</a>
+        <a class="quick-link" href="/docs.html">Copy-paste middleware</a>
+        <p class="status-label">Powered By</p>
+        <p class="muted-note">JWT, RBAC, Prisma, Redis, Google OAuth</p>
       </div>
     </section>
 
-    <section class="card step-card">
+    <section class="card">
       <div class="step-header">
-        <span class="step-badge">Step 1</span>
+        <span class="step-badge">Workflow</span>
         <div>
-          <h2>Register</h2>
-          <p>Create a new account and tenant. You will get the Tenant ID immediately.</p>
+          <h2>From signup to secured APIs</h2>
+          <p>Everything is structured to keep your team focused. The console guides the flow, and docs give copy-ready middleware.</p>
         </div>
       </div>
-      <div class="field-grid">
-        <div>
-          <label>Email</label>
-          <input id="regEmail" type="email" placeholder="name@company.com" />
-        </div>
-        <div>
-          <label>Password</label>
-          <div class="input-with-toggle">
-            <input id="regPassword" type="password" placeholder="Minimum 8 characters" />
-            <button class="toggle" type="button" data-toggle="regPassword">Show</button>
-          </div>
-        </div>
+      <div class="workflow">
+        <div class="workflow-step"><span>1</span><p>Register tenant</p></div>
+        <div class="workflow-step"><span>2</span><p>Verify email</p></div>
+        <div class="workflow-step"><span>3</span><p>Login & get tokens</p></div>
+        <div class="workflow-step"><span>4</span><p>Create API key</p></div>
+        <div class="workflow-step"><span>5</span><p>Drop-in middleware</p></div>
       </div>
-      <div class="field-grid">
-        <div>
-          <label>Tenant Name</label>
-          <input id="regTenantName" type="text" placeholder="Acme Inc" />
-        </div>
-        <div>
-          <label>Existing Tenant ID (optional)</label>
-          <input id="regTenantId" type="text" placeholder="UUID if joining" />
-        </div>
-      </div>
-      <div class="action-row">
-        <button id="registerBtn" class="primary">Register</button>
-        <button id="copyTenantId" class="ghost" type="button">Copy Tenant ID</button>
-        <button id="copyVerifyToken" class="ghost" type="button">Copy Verify Token</button>
-      </div>
-      <pre id="registerResult" class="result"></pre>
     </section>
 
-    <section class="card step-card">
-      <div class="step-header">
-        <span class="step-badge">Step 2</span>
-        <div>
-          <h2>Verify Email</h2>
-          <p>Paste the verification token and activate the account.</p>
-        </div>
-      </div>
-      <div class="field-grid">
-        <div>
-          <label>Verification Token</label>
-          <input id="verifyToken" type="text" placeholder="Paste token" />
-        </div>
-      </div>
-      <div class="action-row">
-        <button id="verifyBtn" class="primary">Verify Email</button>
-      </div>
-      <pre id="verifyResult" class="result"></pre>
-    </section>
-
-    <section class="card step-card">
-      <div class="step-header">
-        <span class="step-badge">Step 3</span>
-        <div>
-          <h2>Login</h2>
-          <p>Get access + refresh tokens for API key creation and protected routes.</p>
-        </div>
-      </div>
-      <div class="field-grid">
-        <div>
-          <label>Email</label>
-          <input id="loginEmail" type="email" placeholder="name@company.com" />
-        </div>
-        <div>
-          <label>Password</label>
-          <div class="input-with-toggle">
-            <input id="loginPassword" type="password" placeholder="Your password" />
-            <button class="toggle" type="button" data-toggle="loginPassword">Show</button>
-          </div>
-        </div>
-      </div>
-      <div class="action-row">
-        <button id="loginBtn" class="primary">Login</button>
-        <button id="copyAccessToken" class="ghost" type="button">Copy Access Token</button>
-      </div>
-      <pre id="loginResult" class="result"></pre>
-    </section>
-
-    <section class="card step-card">
-      <div class="step-header">
-        <span class="step-badge">Step 4</span>
-        <div>
-          <h2>Create API Key</h2>
-          <p>Select services and mint a new API key for your tenant.</p>
-        </div>
-      </div>
+    <section class="card highlight">
       <div>
-        <label>Access Token</label>
-        <div class="input-with-toggle">
-          <input id="accessToken" type="password" placeholder="Paste access token" />
-          <button class="toggle" type="button" data-toggle="accessToken">Show</button>
-        </div>
-      </div>
-      <div>
-        <label>Key Name</label>
-        <input id="keyName" type="text" placeholder="Production key" />
-      </div>
-      <div class="services">
-        <label><input type="checkbox" value="auth" /> Auth</label>
-        <label><input type="checkbox" value="users" /> Users</label>
-        <label><input type="checkbox" value="billing" /> Billing</label>
-        <label><input type="checkbox" value="analytics" /> Analytics</label>
+        <h2>Ready-made middleware</h2>
+        <p class="muted-note">Set two env vars and paste one middleware file. Auth is live across your services.</p>
       </div>
       <div class="action-row">
-        <button id="createKey" class="primary">Generate API Key</button>
-        <button id="copyApiKey" class="ghost" type="button">Copy API Key</button>
-      </div>
-      <pre id="result" class="result"></pre>
-    </section>
-
-    <section class="card step-card">
-      <div class="step-header">
-        <span class="step-badge">Step 4B</span>
-        <div>
-          <h2>Saved API Keys</h2>
-          <p>List all API keys created for this account. Raw keys are only shown once.</p>
-        </div>
-      </div>
-      <div class="action-row">
-        <button id="loadKeys" class="primary">Load My API Keys</button>
-      </div>
-      <div id="keysList" class="keys-list"></div>
-    </section>
-
-    <section class="card step-card">
-      <div class="step-header">
-        <span class="step-badge">Docs</span>
-        <div>
-          <h2>How to Use Your API Key</h2>
-          <p>Send your API key in a request header to your protected services.</p>
-        </div>
-      </div>
-      <div class="docs-grid">
-        <div>
-          <label>Authorization Header</label>
-          <pre class="result">Authorization: Bearer &lt;apiKey&gt;</pre>
-        </div>
-        <div>
-          <label>API Key Header</label>
-          <pre class="result">x-api-key: &lt;apiKey&gt;</pre>
-        </div>
-      </div>
-      <label>Example cURL</label>
-      <pre class="result">curl -H \"Authorization: Bearer &lt;apiKey&gt;\" https://your-service.example.com/resource</pre>
-      <p class="muted-note">Note: API keys are shown once on creation. Store them securely.</p>
-    </section>
-
-    <section class="card step-card">
-      <div class="step-header">
-        <span class="step-badge">Step 5</span>
-        <div>
-          <h2>Google OAuth (Optional)</h2>
-          <p>Authenticate with Google using your Tenant ID.</p>
-        </div>
-      </div>
-      <div class="field-grid">
-        <div>
-          <label>Tenant ID</label>
-          <input id="tenantId" type="text" placeholder="Tenant ID" />
-        </div>
-      </div>
-      <div class="action-row">
-        <button id="googleLogin" class="primary">Login with Google</button>
+        <a class="primary-link" href="/docs.html#middleware">See the middleware</a>
+        <a class="ghost-link" href="/console.html">Generate API key</a>
       </div>
     </section>
   </main>
-
-  <script src="app.js"></script>
 </body>
 </html>

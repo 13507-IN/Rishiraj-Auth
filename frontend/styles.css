@@ -25,6 +25,65 @@ body {
   overflow-x: hidden;
 }
 
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.tag {
+  font-size: 0.75rem;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.nav-links {
+  display: flex;
+  gap: 18px;
+}
+
+.nav-links a {
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.nav-links a.active,
+.nav-links a:hover {
+  color: var(--text);
+}
+
+.primary-link,
+.ghost-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 18px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.primary-link {
+  background: linear-gradient(120deg, var(--accent), var(--accent-strong));
+  color: #1b1b1b;
+}
+
+.ghost-link {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text);
+}
+
 .bg-orb {
   position: absolute;
   width: 420px;
@@ -64,6 +123,14 @@ body {
   margin-bottom: 32px;
 }
 
+.hero-split {
+  gap: 32px;
+}
+
+.hero-slim {
+  margin-bottom: 16px;
+}
+
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.2em;
@@ -90,6 +157,18 @@ body {
   border-radius: 16px;
   min-width: 260px;
   backdrop-filter: blur(10px);
+}
+
+.quick-link {
+  display: block;
+  margin: 8px 0;
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.quick-link:hover {
+  color: var(--accent);
 }
 
 .status-label {
@@ -152,6 +231,13 @@ body {
   margin-bottom: 24px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
   animation: rise 0.6s ease both;
+}
+
+.highlight {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
 }
 
 .step-header {
@@ -343,6 +429,15 @@ button:hover {
 }
 
 @media (max-width: 720px) {
+  .nav {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+  }
+
   .hero {
     flex-direction: column;
     align-items: flex-start;
@@ -355,5 +450,10 @@ button:hover {
   .input-with-toggle {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .highlight {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

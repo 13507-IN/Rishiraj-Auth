@@ -15,8 +15,9 @@ const startServer = async () => {
       console.warn('Redis is unavailable; continuing in fallback mode.');
     }
 
-    app.listen(env.PORT, () => {
-      console.log(`Auth server running on port ${env.PORT}`);
+    const port = process.env.PORT ? Number(process.env.PORT) : env.PORT;
+    app.listen(port, () => {
+      console.log(`Auth server running on port ${port}`);
       if (!env.REDIS_REQUIRED && !isRedisReady()) {
         console.log('Redis fallback enabled: refresh token cache and blacklisting are disabled until Redis is up.');
       }

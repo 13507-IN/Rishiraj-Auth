@@ -25,6 +25,7 @@ const currentTenant = document.getElementById('currentTenant');
 const currentAccess = document.getElementById('currentAccess');
 const loadKeysButton = document.getElementById('loadKeys');
 const keysList = document.getElementById('keysList');
+const createdApiKey = document.getElementById('createdApiKey');
 
 let cachedTenantId = '';
 let cachedVerifyToken = '';
@@ -277,7 +278,10 @@ createKeyButton.addEventListener('click', async () => {
     }
 
     cachedApiKey = data.apiKey;
-    result.textContent = `API Key Created:\n${data.apiKey}`;
+    if (createdApiKey) {
+      createdApiKey.value = data.apiKey;
+    }
+    result.textContent = 'API key created. Copy and store it securely.';
   } catch (err) {
     result.textContent = 'Network error. Please try again.';
   }
