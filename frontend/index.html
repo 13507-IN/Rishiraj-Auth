@@ -3,11 +3,60 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Auth-System</title>
+  <title>Rishiraj-Auth — Authentication-as-a-Service Platform</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 32px;
+    }
+    .feature-card {
+      background: linear-gradient(160deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 28px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(120deg, transparent, rgba(255, 184, 107, 0.03), transparent);
+      transform: translateX(-100%);
+      transition: 0.6s;
+    }
+    .feature-card:hover::before {
+      transform: translateX(100%);
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255, 184, 107, 0.2);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+    }
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: 16px;
+    }
+    .code-preview {
+      background: #080a0f !important;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 18px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: #ffb86b;
+      overflow-x: auto;
+      white-space: pre;
+    }
+  </style>
 </head>
 <body>
   <div class="bg-orb bg-orb-one"></div>
@@ -16,60 +65,101 @@
   <main class="container">
     <nav class="nav">
       <div class="brand">
-        <span>Auth-System</span>
-        <span class="tag">Developer Console</span>
+        <span style="background: linear-gradient(120deg, var(--accent), var(--accent-strong)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.4rem;">Rishiraj-Auth</span>
+        <span class="tag">Authentication-as-a-Service</span>
       </div>
       <div class="nav-links">
-        <a href="/">Home</a>
+        <a href="/" class="active">Home</a>
         <a href="/console.html">Console</a>
         <a href="/docs.html">Docs</a>
+        <a href="/dashboard.html">Dashboard</a>
       </div>
     </nav>
 
-    <section class="hero hero-split">
-      <div>
-        <p class="eyebrow">Multi-tenant Auth Platform</p>
-        <h1>Ship secure auth with one API key.</h1>
-        <p class="subtitle">Register a tenant, verify, login, and plug our drop-in middleware into your backend. Your team can be live in minutes.</p>
+    <header class="hero hero-split" style="margin-bottom: 56px;">
+      <div style="flex: 1.2;">
+        <p class="eyebrow" style="color: var(--accent);">Enterprise-Grade Auth-as-a-Service</p>
+        <h1 style="line-height:1.15; font-weight:700;">Drop-in Authentication for your Websites.</h1>
+        <p class="subtitle" style="font-size:1.1rem; line-height:1.6; margin-bottom: 32px;">
+          Plug in a stunning cross-origin Auth Modal, toggle isolated environments, monitor real-time audit logs, and secure your routes in minutes.
+        </p>
         <div class="action-row">
-          <a class="primary-link" href="/console.html">Open Developer Console</a>
-          <a class="ghost-link" href="/docs.html">Read Integration Docs</a>
+          <a class="primary-link" href="/dashboard.html">Go to Dashboard</a>
+          <a class="ghost-link" href="/console.html">Developer Console</a>
+          <a class="ghost-link" href="/docs.html" style="border-color: rgba(255,184,107,0.3); color: var(--accent);">Get Started (Docs)</a>
         </div>
       </div>
-      <div class="status-card">
-        <p class="status-label">Quick Links</p>
-        <a class="quick-link" href="/console.html">Create tenant and API keys</a>
-        <a class="quick-link" href="/docs.html">Copy-paste middleware</a>
-        <p class="status-label">Powered By</p>
-        <p class="muted-note">JWT, RBAC, Prisma, Redis, Google OAuth</p>
+      <div class="status-card" style="flex: 0.8; padding: 24px;">
+        <h3 style="margin-top:0; margin-bottom:12px; color: var(--text);">Quick Integration</h3>
+        <p class="muted-note" style="margin-bottom:12px;">Include the drop-in client SDK on your webpage:</p>
+        <div class="code-preview" style="font-size:0.75rem; margin-bottom: 16px;">&lt;script src="/sdk/rishiraj-auth.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  const auth = new RishirajAuth({
+    tenantId: "your-tenant-uuid",
+    environment: "DEVELOPMENT",
+    onLogin: (user, tokens) => {
+      console.log("Welcome!", user);
+    }
+  });
+&lt;/script&gt;</div>
+        <a class="quick-link" href="/docs.html" style="font-size:0.85rem; text-decoration: underline;">See Full SDK Reference →</a>
       </div>
-    </section>
+    </header>
 
-    <section class="card">
+    <section class="card" style="margin-bottom: 48px;">
       <div class="step-header">
-        <span class="step-badge">Workflow</span>
+        <span class="step-badge" style="background: rgba(255, 184, 107, 0.1); color: var(--accent);">Workflow</span>
         <div>
-          <h2>From signup to secured APIs</h2>
-          <p>Everything is structured to keep your team focused. The console guides the flow, and docs give copy-ready middleware.</p>
+          <h2>A complete identity stack at your fingertips</h2>
+          <p>We provide a fully isolated tenant database, automated email confirmation verify gates, secure session caching, and full developer telemetry.</p>
         </div>
       </div>
-      <div class="workflow">
-        <div class="workflow-step"><span>1</span><p>Register tenant</p></div>
-        <div class="workflow-step"><span>2</span><p>Verify email</p></div>
-        <div class="workflow-step"><span>3</span><p>Login & get tokens</p></div>
-        <div class="workflow-step"><span>4</span><p>Create API key</p></div>
-        <div class="workflow-step"><span>5</span><p>Drop-in middleware</p></div>
+      <div class="workflow" style="margin-top:24px;">
+        <div class="workflow-step"><span>1</span><p>Create Tenant & Account</p></div>
+        <div class="workflow-step"><span>2</span><p>Configure Dev / Prod Env</p></div>
+        <div class="workflow-step"><span>3</span><p>Generate Service Keys</p></div>
+        <div class="workflow-step"><span>4</span><p>Embed JavaScript SDK</p></div>
+        <div class="workflow-step"><span>5</span><p>Collect Realtime Audit Logs</p></div>
       </div>
     </section>
 
-    <section class="card highlight">
-      <div>
-        <h2>Ready-made middleware</h2>
-        <p class="muted-note">Set two env vars and paste one middleware file. Auth is live across your services.</p>
+    <h2 style="font-size: 2rem; text-align: center; margin-top: 64px; margin-bottom: 8px;">Explore Rishiraj-Auth features</h2>
+    <p style="color: var(--muted); text-align: center; max-width: 600px; margin: 0 auto 40px;">Everything you need to secure your multi-tenant SaaS products without building auth from scratch.</p>
+
+    <div class="features-grid" style="margin-bottom: 64px;">
+      <div class="feature-card">
+        <div class="feature-icon">🚀</div>
+        <h3>Embeddable Client SDK</h3>
+        <p class="muted-note" style="line-height:1.6;">
+          Our ~5KB script includes a prebuilt, gorgeous dark-themed login and registration modal with Google OAuth, automatic token refresh timers, and event emitters.
+        </p>
       </div>
-      <div class="action-row">
-        <a class="primary-link" href="/docs.html#middleware">See the middleware</a>
-        <a class="ghost-link" href="/console.html">Generate API key</a>
+
+      <div class="feature-card">
+        <div class="feature-icon">🛡️</div>
+        <h3>Dual Isolated Environments</h3>
+        <p class="muted-note" style="line-height:1.6;">
+          Each tenant gets segregated <strong>Development</strong> and <strong>Production</strong> projects. Segregate your service tokens, sessions, API limits, and credentials safely.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Developer Dashboard</h3>
+        <p class="muted-note" style="line-height:1.6;">
+          A premium unified control room. Manage active user sessions, rotate or revoke security keys, debug requests using paginated audit telemetry, and manage profile security settings.
+        </p>
+      </div>
+    </div>
+
+    <section class="card highlight" style="background: linear-gradient(135deg, rgba(255, 184, 107, 0.1) 0%, rgba(255, 154, 61, 0.05) 100%); border-color: rgba(255, 184, 107, 0.2);">
+      <div>
+        <h2 style="margin-top:0;">Build something beautiful today.</h2>
+        <p class="muted-note" style="font-size:1.05rem;">Access the developer dashboard or review integration docs to secure your APIs and applications.</p>
+      </div>
+      <div class="action-row" style="flex-shrink:0;">
+        <a class="primary-link" href="/dashboard.html">View Developer Dashboard</a>
+        <a class="ghost-link" href="/docs.html">Read the Docs</a>
       </div>
     </section>
   </main>

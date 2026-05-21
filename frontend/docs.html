@@ -3,143 +3,387 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Integration Docs | Auth-System</title>
+  <title>Developer Integration Docs | Rishiraj-Auth</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    .docs-nav-sticky {
+      position: sticky;
+      top: 24px;
+      align-self: start;
+    }
+    .docs-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 32px;
+      margin-top: 24px;
+    }
+    .side-nav {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+    .side-nav li {
+      margin-bottom: 12px;
+    }
+    .side-nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .side-nav a:hover, .side-nav a.active {
+      color: var(--accent);
+    }
+    .docs-content {
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+    .api-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-right: 8px;
+      text-transform: uppercase;
+    }
+    .badge-post { background: rgba(126, 224, 129, 0.15); color: var(--success); }
+    .badge-get { background: rgba(95, 130, 255, 0.15); color: #5f82ff; }
+    .badge-delete { background: rgba(255, 107, 107, 0.15); color: var(--danger); }
+    @media (max-width: 768px) {
+      .docs-layout {
+        grid-template-columns: 1fr;
+      }
+      .docs-nav-sticky {
+        display: none;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="bg-orb bg-orb-one"></div>
   <div class="bg-orb bg-orb-two"></div>
 
-  <main class="container">
+  <main class="container" style="max-width: 1200px;">
     <nav class="nav">
       <div class="brand">
-        <span>Auth-System</span>
-        <span class="tag">Integration Docs</span>
+        <span style="background: linear-gradient(120deg, var(--accent), var(--accent-strong)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.4rem; font-weight:700;">Rishiraj-Auth</span>
+        <span class="tag">Integration Manual</span>
       </div>
       <div class="nav-links">
         <a href="/">Home</a>
         <a href="/console.html">Console</a>
         <a href="/docs.html" class="active">Docs</a>
+        <a href="/dashboard.html">Dashboard</a>
       </div>
     </nav>
 
-    <header class="hero hero-slim">
+    <header class="hero hero-slim" style="margin-bottom: 40px;">
       <div>
-        <p class="eyebrow">Docs</p>
-        <h1>Drop-in API key authentication</h1>
-        <p class="subtitle">Set two environment variables, paste the middleware, and your service is protected.</p>
+        <p class="eyebrow" style="color: var(--accent);">Developer Documentation</p>
+        <h1>Integration Manual</h1>
+        <p class="subtitle" style="font-size: 1.1rem;">Embed secure login modals, validate backend requests, and build safe multi-tenant software.</p>
       </div>
     </header>
 
-    <section class="card" id="middleware">
-      <div class="step-header">
-        <span class="step-badge">Middleware</span>
-        <div>
-          <h2>Express middleware (copy & paste)</h2>
-          <p>This middleware validates your API key and blocks unauthorized requests.</p>
+    <div class="docs-layout">
+      <!-- Sticky Sidebar -->
+      <aside class="docs-nav-sticky">
+        <div class="card" style="padding: 20px; background: rgba(21, 26, 34, 0.6);">
+          <h3 style="margin-top:0; font-size: 1.1rem; border-bottom: 1px solid var(--card-border); padding-bottom: 8px;">Chapters</h3>
+          <ul class="side-nav">
+            <li><a href="#quick-start">🚀 Quick Start</a></li>
+            <li><a href="#sdk-reference">📦 Client SDK Reference</a></li>
+            <li><a href="#auth-modal">🎨 Login / Register Modal</a></li>
+            <li><a href="#backend-middleware">🛡️ Express Middleware</a></li>
+            <li><a href="#environment-switching">⚙️ Dual Environments</a></li>
+            <li><a href="#framework-guides">🔌 Framework Snippets</a></li>
+            <li><a href="#security-best-practices">🔒 Security & Caching</a></li>
+          </ul>
         </div>
-      </div>
-      <label>Set env vars</label>
-      <pre class="result">AUTH_SYSTEM_URL=https://your-auth.example.com</pre>
+      </aside>
 
-      <label>Middleware file</label>
-      <pre class="result">const authMiddleware = (requiredService = null) => async (req, res, next) => {
+      <!-- Content -->
+      <div class="docs-content">
+        <!-- Section 1: Quick Start -->
+        <section id="quick-start" class="card">
+          <div class="step-header">
+            <span class="step-badge">Quick Start</span>
+            <div>
+              <h2>🚀 3-Step Integration</h2>
+              <p>Add secure authentication to your HTML project in less than 2 minutes.</p>
+            </div>
+          </div>
+
+          <label>Step 1: Include SDK Script and CSS</label>
+          <pre class="result" style="white-space: pre-wrap;">&lt;!-- Include in the &lt;head&gt; of your page --&gt;
+&lt;link rel="stylesheet" href="http://localhost:4000/sdk/rishiraj-auth-modal.css"&gt;
+
+&lt;!-- Include at the bottom of the &lt;body&gt; --&gt;
+&lt;script src="http://localhost:4000/sdk/rishiraj-auth.js"&gt;&lt;/script&gt;</pre>
+
+          <label>Step 2: Initialize Rishiraj-Auth Client</label>
+          <pre class="result">const auth = new RishirajAuth({
+  tenantId: "YOUR_TENANT_ID",
+  environment: "DEVELOPMENT", // or "PRODUCTION"
+  serverUrl: "http://localhost:4000",
+  onLogin: (user, tokens) => {
+    console.log("Logged in successfully:", user);
+    // Token is stored, ready for backend calls!
+  }
+});</pre>
+
+          <label>Step 3: Trigger Login Modal</label>
+          <pre class="result">&lt;button onclick="auth.showLoginModal()"&gt;Log In / Register&lt;/button&gt;</pre>
+        </section>
+
+        <!-- Section 2: SDK Reference -->
+        <section id="sdk-reference" class="card">
+          <div class="step-header">
+            <span class="step-badge">SDK API</span>
+            <div>
+              <h2>📦 Client SDK Reference</h2>
+              <p>Comprehensive API documentation for the `RishirajAuth` class instance.</p>
+            </div>
+          </div>
+
+          <h3>Class Constructor Options</h3>
+          <p class="muted-note">Passed inside the configuration object when instantiating the class:</p>
+          <table class="data-table" style="margin-bottom: 24px;">
+            <thead>
+              <tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>tenantId</code></td><td><code>string (UUID)</code></td><td>Required</td><td>The ID of the tenant you registered in the Developer Console.</td></tr>
+              <tr><td><code>environment</code></td><td><code>"DEVELOPMENT" | "PRODUCTION"</code></td><td><code>"DEVELOPMENT"</code></td><td>API behavior environment. Separates credentials, rate limits.</td></tr>
+              <tr><td><code>serverUrl</code></td><td><code>string</code></td><td><code>"http://localhost:4000"</code></td><td>The URL where the authentication backend server is deployed.</td></tr>
+              <tr><td><code>onLogin</code></td><td><code>function(user, tokens)</code></td><td><code>undefined</code></td><td>Callback executed when login/sign-up succeeds.</td></tr>
+              <tr><td><code>onLogout</code></td><td><code>function()</code></td><td><code>undefined</code></td><td>Callback executed when the user logs out.</td></tr>
+              <tr><td><code>onTokenRefresh</code></td><td><code>function(tokens)</code></td><td><code>undefined</code></td><td>Callback executed when credentials auto-refresh.</td></tr>
+            </tbody>
+          </table>
+
+          <h3>Available Methods</h3>
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            <div>
+              <code style="color:var(--accent); font-size:1rem; font-weight:600;">auth.showLoginModal()</code>
+              <p class="muted-note" style="margin:4px 0 0;">Injects and opens a beautifully styled registration, login, and forgot password modal inside the page context.</p>
+            </div>
+            <div>
+              <code style="color:var(--accent); font-size:1rem; font-weight:600;">auth.logout()</code>
+              <p class="muted-note" style="margin:4px 0 0;">Logs the user out, revokes the refresh token on the server, clears stored session states, and fires <code>onLogout</code>.</p>
+            </div>
+            <div>
+              <code style="color:var(--accent); font-size:1rem; font-weight:600;">auth.getUser()</code>
+              <p class="muted-note" style="margin:4px 0 0;">Returns the current authenticated user's cached profile (UUID, email, name, avatar, isVerified, tenantId).</p>
+            </div>
+            <div>
+              <code style="color:var(--accent); font-size:1rem; font-weight:600;">auth.getTokens()</code>
+              <p class="muted-note" style="margin:4px 0 0;">Returns the current access token and refresh token object: <code>{ accessToken, refreshToken }</code>.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 3: Modal Integration -->
+        <section id="auth-modal" class="card">
+          <div class="step-header">
+            <span class="step-badge">Visuals</span>
+            <div>
+              <h2>🎨 Login / Register Modal</h2>
+              <p>Customize the prebuilt UI and utilize cross-origin callbacks.</p>
+            </div>
+          </div>
+          <p class="muted-note">
+            The modal supports:
+          </p>
+          <ul style="color:var(--muted); font-size:0.95rem; line-height:1.6; margin-bottom: 20px;">
+            <li>Email & Password sign-up and validation gates.</li>
+            <li>Google OAuth integration via native popup. When Google OAuth is successful, the popup close events are hooked, and the tokens are securely transferred to the main page.</li>
+            <li>Forgot password workflows with token entry.</li>
+            <li>Fully responsive dark layout with glassmorphic cards and interactive focus outlines.</li>
+          </ul>
+          <label>Google OAuth Setup</label>
+          <p class="muted-note" style="margin-top:4px;">When registering a client site, make sure you configure your backend Google Client ID, secret and Google Callback URL in the server env variables to allow popups to operate correctly.</p>
+        </section>
+
+        <!-- Section 4: Express Middleware -->
+        <section id="backend-middleware" class="card">
+          <div class="step-header">
+            <span class="step-badge">Backend</span>
+            <div>
+              <h2>🛡️ Express Middleware Protection</h2>
+              <p>Protect your custom Express endpoints by validating API Keys cross-origin.</p>
+            </div>
+          </div>
+          
+          <label>Step 1: Write authMiddleware.js</label>
+          <pre class="result">const authMiddleware = (requiredService = null) => async (req, res, next) => {
   const apiKey = req.headers['x-api-key'] || req.headers.authorization?.replace('Bearer ', '');
   if (!apiKey) {
     return res.status(401).json({ message: 'Missing API key' });
   }
 
-  const response = await fetch(`${process.env.AUTH_SYSTEM_URL}/api-keys/validate`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`
+  try {
+    const response = await fetch('http://localhost:4000/api-keys/validate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ apiKey })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.valid) {
+      return res.status(403).json({ message: 'Invalid or Revoked API key' });
     }
-  });
 
-  const data = await response.json();
+    if (requiredService && (!data.services || !data.services.includes(requiredService))) {
+      return res.status(403).json({ message: 'Forbidden: required service scopes missing' });
+    }
 
-  if (!data.valid) {
-    return res.status(403).json({ message: 'Invalid API key' });
+    // Attach details to request
+    req.tenantId = data.tenantId;
+    req.keyId = data.keyId;
+    req.environment = data.environment;
+    next();
+  } catch (err) {
+    return res.status(500).json({ message: 'Internal validation server error' });
   }
-
-  if (requiredService && (!data.services || !data.services.includes(requiredService))) {
-    return res.status(403).json({ message: 'Service not allowed' });
-  }
-
-  req.tenantId = data.tenantId;
-  req.authKeyId = data.keyId;
-  next();
 };
 
 module.exports = authMiddleware;</pre>
 
-      <p class="muted-note">Uses the built-in `fetch` in Node 18+. For older Node versions, install `node-fetch`.</p>
-
-      <label>Usage in routes</label>
-      <pre class="result">const express = require('express');
+          <label>Step 2: Securing routes</label>
+          <pre class="result">const express = require('express');
 const authMiddleware = require('./authMiddleware');
+const app = express();
 
-const router = express.Router();
-
-router.get('/billing', authMiddleware('billing'), (req, res) => {
-  res.json({ tenantId: req.tenantId, message: 'Billing access granted' });
-});
-
-module.exports = router;</pre>
-
-      <p class="muted-note">Important: Store API keys in server-side env variables only. Never expose them in frontend code.</p>
-    </section>
-
-    <section class="card">
-      <div class="step-header">
-        <span class="step-badge">Client</span>
-        <div>
-          <h2>Send the API key from your service</h2>
-          <p>Keep the API key in your server environment and attach it to outgoing requests.</p>
-        </div>
-      </div>
-      <label>Env</label>
-      <pre class="result">AUTH_API_KEY=your_api_key_here</pre>
-      <label>Outgoing request example</label>
-      <pre class="result">const response = await fetch('https://your-service.example.com/resource', {
-  headers: {
-    Authorization: `Bearer ${process.env.AUTH_API_KEY}`
-  }
+app.get('/api/analytics', authMiddleware('analytics'), (req, res) => {
+  res.json({
+    message: "Success!",
+    tenantId: req.tenantId,
+    environment: req.environment
+  });
 });</pre>
-    </section>
+        </section>
 
-    <section class="card">
-      <div class="step-header">
-        <span class="step-badge">Validate</span>
-        <div>
-          <h2>Validate API keys manually</h2>
-          <p>Use this endpoint if you want to build your own validation logic.</p>
-        </div>
-      </div>
-      <label>Request</label>
-      <pre class="result">POST /api-keys/validate
-Authorization: Bearer &lt;apiKey&gt;</pre>
-      <label>Response</label>
-      <pre class="result">{
-  "valid": true,
-  "keyId": "...",
-  "tenantId": "...",
-  "services": ["auth", "users"]
+        <!-- Section 5: Dual Environments -->
+        <section id="environment-switching" class="card">
+          <div class="step-header">
+            <span class="step-badge">Config</span>
+            <div>
+              <h2>⚙️ Dual Isolated Environments</h2>
+              <p>How the segregated Development and Production layers behave.</p>
+            </div>
+          </div>
+          <div class="docs-grid">
+            <div style="background: rgba(126, 224, 129, 0.05); border: 1px solid rgba(126, 224, 129, 0.2); padding: 18px; border-radius:12px;">
+              <h4 style="margin:0 0 8px; color: var(--success);">🟢 Development</h4>
+              <p class="muted-note" style="margin:0; line-height:1.5;">Used for staging and sandbox integration. Verbose logging is enabled. Rate limits are relaxed. Registered users are immediately active without forcing email validation.</p>
+            </div>
+            <div style="background: rgba(95, 130, 255, 0.05); border: 1px solid rgba(95, 130, 255, 0.2); padding: 18px; border-radius:12px;">
+              <h4 style="margin:0 0 8px; color: #5f82ff;">🔵 Production</h4>
+              <p class="muted-note" style="margin:0; line-height:1.5;">Strict production rules. Strict API limits are enforced. Every user registration is locked until they receive and enter their email confirmation tokens.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 6: Framework Snippets -->
+        <section id="framework-guides" class="card">
+          <div class="step-header">
+            <span class="step-badge">Frontend</span>
+            <div>
+              <h2>🔌 Integration Framework Snippets</h2>
+              <p>Quick start layouts for React, Next.js, and raw JavaScript.</p>
+            </div>
+          </div>
+
+          <label>React / Next.js Setup Example</label>
+          <pre class="result">import React, { useEffect, useState } from 'react';
+
+export default function LoginButton() {
+  const [authClient, setAuthClient] = useState(null);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // Dynamic import to support SSR environments
+    import('http://localhost:4000/sdk/rishiraj-auth.js').then(() => {
+      const auth = new window.RishirajAuth({
+        tenantId: "YOUR_TENANT_UUID",
+        environment: "DEVELOPMENT",
+        onLogin: (u) => setUser(u),
+        onLogout: () => setUser(null)
+      });
+      setAuthClient(auth);
+      setUser(auth.getUser());
+    });
+  }, []);
+
+  if (user) {
+    return (
+      &lt;div&gt;
+        &lt;p&gt;Hello, {user.email}&lt;/p&gt;
+        &lt;button onClick={() =&gt; authClient.logout()}&gt;Sign Out&lt;/button&gt;
+      &lt;/div&gt;
+    );
+  }
+
+  return (
+    &lt;button onClick={() =&gt; authClient?.showLoginModal()}&gt;
+      Sign In
+    &lt;/button&gt;
+  );
 }</pre>
-    </section>
+        </section>
 
-    <section class="card">
-      <div class="step-header">
-        <span class="step-badge">Need help?</span>
-        <div>
-          <h2>Talk to the team</h2>
-          <p>We can ship SDKs for your stack or add service-specific scopes for you.</p>
-        </div>
+        <!-- Section 7: Security Best Practices -->
+        <section id="security-best-practices" class="card">
+          <div class="step-header">
+            <span class="step-badge">Security</span>
+            <div>
+              <h2>🔒 Security & Token Caching</h2>
+              <p>Guidelines for storing secrets and managing tokens.</p>
+            </div>
+          </div>
+          <ul style="color:var(--muted); font-size:0.95rem; line-height:1.7; padding-left:20px; margin:0;">
+            <li><strong style="color:var(--text)">Keep Secret Keys Secure:</strong> Never hardcode API Keys or export them to frontend files or repositories. Always fetch API validation results through backend server endpoints.</li>
+            <li><strong style="color:var(--text)">Auto token rotation:</strong> The JavaScript SDK maintains an active silent token-refresh timer. Stale access tokens expire within 15 minutes and rotate automatically using stored secure HttpOnly/LocalStorage refresh tokens.</li>
+            <li><strong style="color:var(--text)">Session Management:</strong> Developers can monitor and revoke active device sessions instantly via the Developer Dashboard.</li>
+          </ul>
+        </section>
       </div>
-    </section>
+    </div>
   </main>
+
+  <script>
+    // Highlight sidebar on scroll
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.side-nav a');
+
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        const sectionHeight = section.clientHeight;
+        if (pageYOffset >= (sectionTop - 120)) {
+          current = section.getAttribute('id');
+        }
+      });
+
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${current}`) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
 </body>
 </html>
