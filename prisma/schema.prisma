@@ -18,6 +18,11 @@ enum AuditAction {
   FAILED_LOGIN
 }
 
+enum Environment {
+  DEVELOPMENT
+  PRODUCTION
+}
+
 model Tenant {
   id        String    @id @default(uuid())
   name      String
@@ -25,6 +30,7 @@ model Tenant {
   users     User[]
   apiKeys   ApiKey[]
   audits    AuditLog[]
+  projects  Project[]
 
   @@unique([name])
 }
@@ -32,6 +38,8 @@ model Tenant {
 model User {
   id           String         @id @default(uuid())
   email        String         @unique
+  name         String?
+  avatarUrl    String?
   password     String?
   role         Role           @default(USER)
   tenantId     String
@@ -93,6 +101,7 @@ model AuditLog {
   tenant    Tenant?     @relation(fields: [tenantId], references: [id])
   action    AuditAction
   ip        String?
+  environment Environment?
   createdAt DateTime    @default(now())
 
   @@index([userId])
@@ -109,9 +118,22 @@ model ApiKey {
   tenantId  String
   user      User     @relation(fields: [userId], references: [id])
   tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  environment Environment @default(PRODUCTION)
   createdAt DateTime @default(now())
   revokedAt DateTime?
 
   @@index([userId])
+  @@index([tenantId])
+}
+
+model Project {
+  id          String      @id @default(uuid())
+  name        String
+  tenantId    String
+  tenant      Tenant      @relation(fields: [tenantId], references: [id])
+  environment Environment @default(DEVELOPMENT)
+  createdAt   DateTime    @default(now())
+
+  @@unique([tenantId, environment])
   @@index([tenantId])
 }
