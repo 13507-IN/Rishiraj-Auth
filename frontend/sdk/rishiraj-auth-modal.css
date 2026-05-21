@@ -1,0 +1,505 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Rishiraj-Auth SDK — Modal Stylesheet
+   Self-contained, prefixed with .ra- to avoid host-page conflicts.
+   ═══════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ── Design Tokens ─────────────────────────────────────────────── */
+:root {
+  --ra-bg: #0a0a10;
+  --ra-bg-accent: #121826;
+  --ra-card: #151a22;
+  --ra-card-border: rgba(255, 255, 255, 0.06);
+  --ra-accent: #ffb86b;
+  --ra-accent-strong: #ff9a3d;
+  --ra-text: #f6f4ff;
+  --ra-muted: #a7b0c0;
+  --ra-success: #7ee081;
+  --ra-danger: #ff6b6b;
+  --ra-font-body: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --ra-font-code: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ── Overlay ───────────────────────────────────────────────────── */
+.ra-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483640;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 2, 6, 0.78);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  font-family: var(--ra-font-body);
+}
+
+.ra-overlay.ra-visible {
+  opacity: 1;
+}
+
+/* ── Modal Card ────────────────────────────────────────────────── */
+.ra-modal {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  margin: 16px;
+  background: var(--ra-card);
+  border: 1px solid var(--ra-card-border);
+  border-radius: 18px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 24px 80px -12px rgba(0, 0, 0, 0.65),
+    0 0 60px -20px rgba(255, 184, 107, 0.08);
+  overflow: hidden;
+  transform: translateY(24px) scale(0.97);
+  transition: transform 0.35s cubic-bezier(0.19, 1, 0.22, 1),
+              opacity 0.3s ease;
+  opacity: 0;
+}
+
+.ra-overlay.ra-visible .ra-modal {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+/* ── Header ────────────────────────────────────────────────────── */
+.ra-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 28px 0 28px;
+}
+
+.ra-modal-title {
+  font-family: var(--ra-font-body);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ra-text);
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.ra-modal-title .ra-title-accent {
+  background: linear-gradient(135deg, var(--ra-accent), var(--ra-accent-strong));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Close Button ──────────────────────────────────────────────── */
+.ra-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ra-muted);
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  line-height: 1;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.ra-close:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ra-text);
+}
+
+.ra-close:active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ── Tab Bar ───────────────────────────────────────────────────── */
+.ra-tabs {
+  display: flex;
+  gap: 0;
+  padding: 20px 28px 0 28px;
+  border-bottom: 1px solid var(--ra-card-border);
+}
+
+.ra-tab {
+  flex: 1;
+  padding: 10px 0 14px 0;
+  font-family: var(--ra-font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ra-muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.25s;
+  text-align: center;
+  letter-spacing: 0.2px;
+}
+
+.ra-tab:hover {
+  color: var(--ra-text);
+}
+
+.ra-tab.active {
+  color: var(--ra-accent);
+  border-bottom-color: var(--ra-accent);
+}
+
+/* ── Form ──────────────────────────────────────────────────────── */
+.ra-form {
+  padding: 24px 28px 28px 28px;
+}
+
+.ra-form-panel {
+  display: none;
+}
+
+.ra-form-panel.ra-active {
+  display: block;
+  animation: ra-fadeIn 0.25s ease;
+}
+
+@keyframes ra-fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Fields ────────────────────────────────────────────────────── */
+.ra-field {
+  margin-bottom: 18px;
+}
+
+.ra-label {
+  display: block;
+  font-family: var(--ra-font-body);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ra-muted);
+  margin-bottom: 7px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.ra-input {
+  width: 100%;
+  padding: 12px 14px;
+  font-family: var(--ra-font-body);
+  font-size: 14.5px;
+  color: var(--ra-text);
+  background: var(--ra-bg-accent);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.25s, box-shadow 0.25s;
+  box-sizing: border-box;
+}
+
+.ra-input::placeholder {
+  color: rgba(167, 176, 192, 0.5);
+}
+
+.ra-input:focus {
+  border-color: var(--ra-accent);
+  box-shadow: 0 0 0 3px rgba(255, 184, 107, 0.12),
+              0 0 16px -4px rgba(255, 184, 107, 0.15);
+}
+
+/* ── Buttons ───────────────────────────────────────────────────── */
+.ra-btn-primary {
+  width: 100%;
+  padding: 13px 20px;
+  font-family: var(--ra-font-body);
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #0a0a10;
+  background: linear-gradient(135deg, var(--ra-accent), var(--ra-accent-strong));
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.25s, opacity 0.2s;
+  letter-spacing: 0.2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ra-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px -4px rgba(255, 154, 61, 0.35);
+}
+
+.ra-btn-primary:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.ra-btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ── Divider ───────────────────────────────────────────────────── */
+.ra-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 20px 0;
+  font-family: var(--ra-font-body);
+  font-size: 12px;
+  color: var(--ra-muted);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.ra-divider::before,
+.ra-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--ra-card-border);
+}
+
+/* ── Google Button ─────────────────────────────────────────────── */
+.ra-btn-google {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 20px;
+  font-family: var(--ra-font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ra-text);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.ra-btn-google:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.ra-btn-google:active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ra-btn-google svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* ── Link Button (Forgot Password, etc.) ──────────────────────── */
+.ra-btn-link {
+  background: none;
+  border: none;
+  font-family: var(--ra-font-body);
+  font-size: 13px;
+  color: var(--ra-accent);
+  cursor: pointer;
+  padding: 4px 0;
+  transition: color 0.2s;
+  text-decoration: none;
+}
+
+.ra-btn-link:hover {
+  color: var(--ra-accent-strong);
+  text-decoration: underline;
+}
+
+/* ── Messages ──────────────────────────────────────────────────── */
+.ra-message {
+  padding: 11px 14px;
+  border-radius: 9px;
+  font-family: var(--ra-font-body);
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  line-height: 1.5;
+  animation: ra-fadeIn 0.25s ease;
+  display: none;
+}
+
+.ra-message.ra-show {
+  display: block;
+}
+
+.ra-message.error {
+  color: var(--ra-danger);
+  background: rgba(255, 107, 107, 0.08);
+  border: 1px solid rgba(255, 107, 107, 0.15);
+}
+
+.ra-message.success {
+  color: var(--ra-success);
+  background: rgba(126, 224, 129, 0.08);
+  border: 1px solid rgba(126, 224, 129, 0.15);
+}
+
+/* ── Loading Spinner ───────────────────────────────────────────── */
+.ra-loading {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(10, 10, 16, 0.2);
+  border-top-color: #0a0a10;
+  border-radius: 50%;
+  animation: ra-spin 0.65s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+.ra-loading.ra-loading-light {
+  border-color: rgba(255, 255, 255, 0.15);
+  border-top-color: var(--ra-accent);
+}
+
+@keyframes ra-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Forgot Password Panel ─────────────────────────────────────── */
+.ra-forgot-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -10px;
+  margin-bottom: 18px;
+}
+
+/* ── Footer / Branding ─────────────────────────────────────────── */
+.ra-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 28px 20px 28px;
+  gap: 5px;
+}
+
+.ra-footer-text {
+  font-family: var(--ra-font-body);
+  font-size: 11px;
+  color: rgba(167, 176, 192, 0.45);
+  letter-spacing: 0.3px;
+}
+
+.ra-footer-brand {
+  font-family: var(--ra-font-code);
+  font-size: 11px;
+  font-weight: 500;
+  background: linear-gradient(135deg, var(--ra-accent), var(--ra-accent-strong));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-decoration: none;
+}
+
+/* ── Logout Button (injected via showLogoutButton) ─────────────── */
+.ra-btn-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-family: var(--ra-font-body);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ra-text);
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.2);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.ra-btn-logout:hover {
+  background: rgba(255, 107, 107, 0.18);
+  border-color: rgba(255, 107, 107, 0.35);
+  transform: translateY(-1px);
+}
+
+.ra-btn-logout:active {
+  transform: translateY(0);
+}
+
+/* ── Password toggle ────────────────────────────────────────────── */
+.ra-input-wrap {
+  position: relative;
+}
+
+.ra-input-wrap .ra-input {
+  padding-right: 42px;
+}
+
+.ra-toggle-pw {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--ra-muted);
+  cursor: pointer;
+  padding: 4px;
+  font-size: 16px;
+  line-height: 1;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ra-toggle-pw:hover {
+  color: var(--ra-text);
+}
+
+/* ── Responsive ────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .ra-modal {
+    max-width: 100%;
+    margin: 8px;
+    border-radius: 14px;
+  }
+
+  .ra-modal-header {
+    padding: 20px 20px 0 20px;
+  }
+
+  .ra-tabs {
+    padding: 16px 20px 0 20px;
+  }
+
+  .ra-form {
+    padding: 20px 20px 24px 20px;
+  }
+
+  .ra-footer {
+    padding: 0 20px 16px 20px;
+  }
+
+  .ra-modal-title {
+    font-size: 18px;
+  }
+}
+
+/* ── Reset (scoped to .ra-overlay) ─────────────────────────────── */
+.ra-overlay *,
+.ra-overlay *::before,
+.ra-overlay *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.ra-overlay button {
+  font-family: inherit;
+}
