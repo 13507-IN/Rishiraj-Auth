@@ -31,7 +31,14 @@ const env = {
   PASSWORD_RESET_TTL_MINUTES: Number(process.env.PASSWORD_RESET_TTL_MINUTES || 30),
   REDIS_REQUIRED: process.env.REDIS_REQUIRED
     ? process.env.REDIS_REQUIRED === 'true'
-    : NODE_ENV === 'production'
+    : NODE_ENV === 'production',
+  SMTP_HOST: process.env.SMTP_HOST || '',
+  SMTP_PORT: Number(process.env.SMTP_PORT || 587),
+  SMTP_USER: process.env.SMTP_USER || '',
+  SMTP_PASS: process.env.SMTP_PASS || '',
+  SMTP_FROM: process.env.SMTP_FROM || 'noreply@rishiraj-auth.dev',
+  ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS || '*',
+  DEFAULT_ENVIRONMENT: process.env.DEFAULT_ENVIRONMENT || 'DEVELOPMENT'
 };
 
 module.exports = env;
