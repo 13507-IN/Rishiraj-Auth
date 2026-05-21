@@ -23,6 +23,7 @@
         <a href="/">Home</a>
         <a href="/console.html" class="active">Console</a>
         <a href="/docs.html">Docs</a>
+        <a href="/dashboard.html">Dashboard</a>
       </div>
     </nav>
 
@@ -62,6 +63,12 @@
         <p>Google OAuth</p>
       </div>
     </section>
+
+    <!-- Environment Toggle -->
+    <div class="env-toggle" style="display:flex; justify-content:center; margin-bottom:28px;">
+      <button class="env-toggle-btn active-dev" id="envDev">Development</button>
+      <button class="env-toggle-btn" id="envProd">Production</button>
+    </div>
 
     <section class="card step-card">
       <div class="step-header">
@@ -205,6 +212,34 @@
 
     <section class="card step-card">
       <div class="step-header">
+        <span class="step-badge">Step 4C</span>
+        <div>
+          <h2>API Key Playground</h2>
+          <p>Test-validate any API key and see the result instantly.</p>
+        </div>
+      </div>
+      <div class="field-grid">
+        <div>
+          <label>API Key</label>
+          <input id="playgroundKey" type="text" placeholder="Paste an API key" />
+        </div>
+        <div>
+          <label>Send Method</label>
+          <select id="playgroundMethod" style="width:100%; padding:12px 14px; border-radius:12px; border:1px solid transparent; background:#0f1320; color:var(--text); font-size:0.95rem; font-family:inherit;">
+            <option value="bearer">Authorization: Bearer</option>
+            <option value="x-api-key">x-api-key Header</option>
+            <option value="body">Request Body</option>
+          </select>
+        </div>
+      </div>
+      <div class="action-row">
+        <button id="validateKeyBtn" class="primary">Validate Key</button>
+      </div>
+      <div id="playgroundResult" style="margin-top:16px;"></div>
+    </section>
+
+    <section class="card step-card">
+      <div class="step-header">
         <span class="step-badge">Step 5</span>
         <div>
           <h2>Google OAuth (Optional)</h2>
@@ -220,6 +255,43 @@
       <div class="action-row">
         <button id="googleLogin" class="primary">Login with Google</button>
       </div>
+    </section>
+
+    <section class="card step-card">
+      <div class="step-header">
+        <span class="step-badge">Step 6</span>
+        <div>
+          <h2>Password Reset</h2>
+          <p>Request a reset token and set a new password.</p>
+        </div>
+      </div>
+      <div class="field-grid">
+        <div>
+          <label>Email</label>
+          <input id="resetEmail" type="email" placeholder="name@company.com" />
+        </div>
+      </div>
+      <div class="action-row">
+        <button id="forgotPasswordBtn" class="primary">Request Reset Token</button>
+      </div>
+      <pre id="forgotResult" class="result" style="display:none;"></pre>
+      <div class="field-grid" style="margin-top:16px;">
+        <div>
+          <label>Reset Token</label>
+          <input id="resetToken" type="text" placeholder="Paste reset token" />
+        </div>
+        <div>
+          <label>New Password</label>
+          <div class="input-with-toggle">
+            <input id="newPassword" type="password" placeholder="Minimum 8 characters" />
+            <button class="toggle" type="button" data-toggle="newPassword">Show</button>
+          </div>
+        </div>
+      </div>
+      <div class="action-row">
+        <button id="resetPasswordBtn" class="primary">Reset Password</button>
+      </div>
+      <pre id="resetResult" class="result" style="display:none;"></pre>
     </section>
   </main>
 
