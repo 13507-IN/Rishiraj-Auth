@@ -4,11 +4,44 @@ const env = require('../config/env');
 let transporter = null;
 let etherealReady = false;
 
+// Eagerly initialize the transporter in the background on startup
+if (env.SMTP_HOST) {
+  transporter = nodemailer.createTransport({
+    host: env.SMTP_HOST,
+    port: env.SMTP_PORT,
+    secure: env.SMTP_PORT === 465,
+    auth: {
+      user: env.SMTP_USER,
+      pass: env.SMTP_PASS
+    }
+  });
+  console.log('📧 Email: Production SMTP eagerly initialized');
+} else {
+  nodemailer.createTestAccount()
+    .then((testAccount) => {
+      transporter = nodemailer.createTransport({
+        host: 'smtp.ethereal.email',
+        port: 587,
+        secure: false,
+        auth: {
+          user: testAccount.user,
+          pass: testAccount.pass
+        }
+      });
+      etherealReady = true;
+      console.log('📧 Email: Ethereal test account eagerly initialized');
+      console.log(`   Ethereal user: ${testAccount.user}`);
+    })
+    .catch((err) => {
+      console.error('❌ Failed to eagerly initialize Ethereal test account:', err.message);
+    });
+}
+
 const getTransporter = async () => {
   if (transporter) return transporter;
 
+  // Fallback if eager initialization failed or hasn't finished yet
   if (env.SMTP_HOST) {
-    // Production SMTP
     transporter = nodemailer.createTransport({
       host: env.SMTP_HOST,
       port: env.SMTP_PORT,
@@ -18,9 +51,9 @@ const getTransporter = async () => {
         pass: env.SMTP_PASS
       }
     });
-    console.log('📧 Email: Using production SMTP');
+    console.log('📧 Email: Production SMTP initialized on-demand');
   } else {
-    // Ethereal dev fallback
+    console.log('📧 Email: Creating Ethereal test account on-demand (fallback)...');
     const testAccount = await nodemailer.createTestAccount();
     transporter = nodemailer.createTransport({
       host: 'smtp.ethereal.email',
@@ -32,7 +65,7 @@ const getTransporter = async () => {
       }
     });
     etherealReady = true;
-    console.log('📧 Email: Using Ethereal test account (dev mode)');
+    console.log('📧 Email: Ethereal test account initialized on-demand');
     console.log(`   Ethereal user: ${testAccount.user}`);
   }
 
@@ -64,21 +97,35 @@ const buildHtmlEmail = ({ title, heading, body, buttonText, buttonUrl, token }) 
 };
 
 const sendMail = async ({ to, subject, html }) => {
-  const transport = await getTransporter();
-  const info = await transport.sendMail({
-    from: env.SMTP_FROM,
-    to,
-    subject,
-    html
-  });
+  try {
+    const transport = await getTransporter();
+    const info = await transport.sendMail({
+      from: env.SMTP_FROM,
+      to,
+      subject,
+      html
+    });
 
-  if (etherealReady) {
-    const previewUrl = nodemailer.getTestMessageUrl(info);
-    console.log(`\n📬 Email Preview for ${to}:`);
-    console.log(`   ${previewUrl}\n`);
+    if (etherealReady) {
+      const previewUrl = nodemailer.getTestMessageUrl(info);
+      console.log(`\n📬 Email Preview for ${to}:`);
+      console.log(`   ${previewUrl}\n`);
+    }
+
+    return info;
+  } catch (error) {
+    console.error('❌ Failed to send email via SMTP:', error.message);
+    
+    // In development/local environments, do not crash the registration request!
+    // Simply fallback to logging the details to the console.
+    if (env.NODE_ENV !== 'production') {
+      console.log(`\n📬 [DEV FALLBACK] Simulated Email to ${to}:`);
+      console.log(`   Subject: ${subject}`);
+      console.log(`   HTML Content:\n${html}\n`);
+      return { messageId: 'simulated-id' };
+    }
+    throw error;
   }
-
-  return info;
 };
 
 const sendVerificationEmail = async (email, token) => {
