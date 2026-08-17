@@ -16,7 +16,7 @@ const startServer = async () => {
     }
 
     const port = process.env.PORT ? Number(process.env.PORT) : env.PORT;
-    app.listen(port, () => {
+    app.listen(port, '0.0.0.0', () => {
       console.log(`Auth server running on port ${port}`);
       if (!env.REDIS_REQUIRED && !isRedisReady()) {
         console.log('Redis fallback enabled: refresh token cache and blacklisting are disabled until Redis is up.');
