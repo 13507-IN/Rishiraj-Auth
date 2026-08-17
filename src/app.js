@@ -16,7 +16,7 @@ const app = express();
 
 configurePassport();
 
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 
 const allowedOrigins = env.ALLOWED_ORIGINS === '*' ? '*' : env.ALLOWED_ORIGINS.split(',').map(s => s.trim());
 app.use(cors({
