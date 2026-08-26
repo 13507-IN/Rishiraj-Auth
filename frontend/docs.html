@@ -123,16 +123,16 @@
 
           <label>Step 1: Include SDK Script and CSS</label>
           <pre class="result" style="white-space: pre-wrap;">&lt;!-- Include in the &lt;head&gt; of your page --&gt;
-&lt;link rel="stylesheet" href="http://localhost:4000/sdk/rishiraj-auth-modal.css"&gt;
+&lt;link rel="stylesheet" href="https://your-auth-server.com/sdk/rishiraj-auth-modal.css"&gt;
 
 &lt;!-- Include at the bottom of the &lt;body&gt; --&gt;
-&lt;script src="http://localhost:4000/sdk/rishiraj-auth.js"&gt;&lt;/script&gt;</pre>
+&lt;script src="https://your-auth-server.com/sdk/rishiraj-auth.js"&gt;&lt;/script&gt;</pre>
 
           <label>Step 2: Initialize Rishiraj-Auth Client</label>
           <pre class="result">const auth = new RishirajAuth({
   tenantId: "YOUR_TENANT_ID",
   environment: "DEVELOPMENT", // or "PRODUCTION"
-  serverUrl: "http://localhost:4000",
+  serverUrl: "https://your-auth-server.com",
   onLogin: (user, tokens) => {
     console.log("Logged in successfully:", user);
     // Token is stored, ready for backend calls!
@@ -162,7 +162,7 @@
             <tbody>
               <tr><td><code>tenantId</code></td><td><code>string (UUID)</code></td><td>Required</td><td>The ID of the tenant you registered in the Developer Console.</td></tr>
               <tr><td><code>environment</code></td><td><code>"DEVELOPMENT" | "PRODUCTION"</code></td><td><code>"DEVELOPMENT"</code></td><td>API behavior environment. Separates credentials, rate limits.</td></tr>
-              <tr><td><code>serverUrl</code></td><td><code>string</code></td><td><code>"http://localhost:4000"</code></td><td>The URL where the authentication backend server is deployed.</td></tr>
+              <tr><td><code>serverUrl</code></td><td><code>string</code></td><td><code>window.location.origin</code></td><td>The domain where the Rishiraj-Auth backend server is deployed (e.g. <code>"https://your-auth-server.com"</code>).</td></tr>
               <tr><td><code>onLogin</code></td><td><code>function(user, tokens)</code></td><td><code>undefined</code></td><td>Callback executed when login/sign-up succeeds.</td></tr>
               <tr><td><code>onLogout</code></td><td><code>function()</code></td><td><code>undefined</code></td><td>Callback executed when the user logs out.</td></tr>
               <tr><td><code>onTokenRefresh</code></td><td><code>function(tokens)</code></td><td><code>undefined</code></td><td>Callback executed when credentials auto-refresh.</td></tr>
@@ -230,7 +230,7 @@
   }
 
   try {
-    const response = await fetch('http://localhost:4000/api-keys/validate', {
+    const response = await fetch('https://your-auth-server.com/api-keys/validate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -314,7 +314,7 @@ export default function LoginButton() {
 
   useEffect(() => {
     // Dynamic import to support SSR environments
-    import('http://localhost:4000/sdk/rishiraj-auth.js').then(() => {
+    import('https://your-auth-server.com/sdk/rishiraj-auth.js').then(() => {
       const auth = new window.RishirajAuth({
         tenantId: "YOUR_TENANT_UUID",
         environment: "DEVELOPMENT",
@@ -363,6 +363,14 @@ export default function LoginButton() {
   </main>
 
   <script>
+    // Dynamically replace placeholder server URL with actual current origin if docs viewed on server
+    if (window.location.origin && window.location.origin !== 'null' && window.location.protocol !== 'file:') {
+      const currentOrigin = window.location.origin;
+      document.querySelectorAll('pre code, pre.result').forEach(el => {
+        el.innerHTML = el.innerHTML.replaceAll('https://your-auth-server.com', currentOrigin);
+      });
+    }
+
     // Highlight sidebar on scroll
     const sections = document.querySelectorAll('section[id]');
     const navLinks = document.querySelectorAll('.side-nav a');
