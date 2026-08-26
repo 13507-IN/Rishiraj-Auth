@@ -67,6 +67,12 @@ const resetPasswordSchema = z.object({
   })
 });
 
+const verifyTokenSchema = z.object({
+  body: z.object({
+    token: z.string().optional()
+  }).optional()
+});
+
 router.post('/register', authRateLimiter, validate(registerSchema), authController.register);
 router.post('/login', authRateLimiter, validate(loginSchema), authController.login);
 router.post('/logout', authenticate, validate(logoutSchema), authController.logout);
@@ -75,6 +81,7 @@ router.post('/verify-email', validate(verifyEmailSchema), authController.verifyE
 router.post('/resend-verification', authRateLimiter, validate(resendSchema), authController.resendVerificationHandler);
 router.post('/forgot-password', authRateLimiter, validate(forgotPasswordSchema), authController.forgotPassword);
 router.post('/reset-password', authRateLimiter, validate(resetPasswordSchema), authController.resetPasswordHandler);
+router.post('/verify-token', validate(verifyTokenSchema), authController.verifyToken);
 
 router.get('/google', (req, res, next) => {
   if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {

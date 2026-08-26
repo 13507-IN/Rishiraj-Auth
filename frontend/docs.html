@@ -102,6 +102,7 @@
             <li><a href="#sdk-reference">📦 Client SDK Reference</a></li>
             <li><a href="#auth-modal">🎨 Login / Register Modal</a></li>
             <li><a href="#backend-middleware">🛡️ Express Middleware</a></li>
+            <li><a href="#token-verification">🔑 Token Verification API</a></li>
             <li><a href="#environment-switching">⚙️ Dual Environments</a></li>
             <li><a href="#framework-guides">🔌 Framework Snippets</a></li>
             <li><a href="#security-best-practices">🔒 Security & Caching</a></li>
@@ -272,6 +273,90 @@ app.get('/api/analytics', authMiddleware('analytics'), (req, res) => {
     environment: req.environment
   });
 });</pre>
+        </section>
+
+        <!-- Section 4b: Token Verification API -->
+        <section id="token-verification" class="card">
+          <div class="step-header">
+            <span class="step-badge">API</span>
+            <div>
+              <h2>🔑 Token Verification API</h2>
+              <p>Verify user access tokens from your backend without sharing JWT secrets. This is the recommended approach for third-party integrations.</p>
+            </div>
+          </div>
+
+          <div style="background: rgba(126, 224, 129, 0.06); border: 1px solid rgba(126, 224, 129, 0.2); padding: 14px 18px; border-radius: 10px; margin-bottom: 20px;">
+            <p class="muted-note" style="margin:0; color: var(--success);"><strong>Why this endpoint?</strong> Third-party backends should never need your JWT signing secret. Instead, call this endpoint to cryptographically verify any access token issued by Rishiraj-Auth.</p>
+          </div>
+
+          <label><span class="api-badge badge-post">POST</span> /auth/verify-token</label>
+          <p class="muted-note" style="margin: 4px 0 16px;">Verifies an access token's signature, checks revocation status, and returns the associated user details.</p>
+
+          <label>Request Body</label>
+          <pre class="result">{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}</pre>
+          <p class="muted-note" style="margin: 4px 0 16px;">Alternatively, send the token via the <code>Authorization: Bearer &lt;token&gt;</code> header.</p>
+
+          <label>✅ Success Response (200)</label>
+          <pre class="result">{
+  "valid": true,
+  "user": {
+    "userId": "a1b2c3d4-e5f6-...",
+    "tenantId": "b046133d-24dd-...",
+    "role": "user",
+    "email": "developer@example.com",
+    "name": "Rishiraj"
+  },
+  "expiresAt": "2026-08-26T12:30:00.000Z"
+}</pre>
+
+          <label>❌ Failure Response (200)</label>
+          <pre class="result">{
+  "valid": false,
+  "error": "Token has expired"
+}</pre>
+          <p class="muted-note" style="margin: 4px 0 16px;">Note: This endpoint always returns HTTP 200. Use the <code>valid</code> field to determine token validity. This is intentional — a verification API should not use HTTP status codes for token validity.</p>
+
+          <label>Express Middleware Example (using verify-token)</label>
+          <pre class="result">const authMiddleware = async (req, res, next) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.startsWith('Bearer ')
+    ? authHeader.slice(7) : '';
+
+  if (!token) {
+    return res.status(401).json({ message: 'Missing token' });
+  }
+
+  try {
+    const response = await fetch(
+      'https://your-auth-server.com/auth/verify-token',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!data.valid) {
+      return res.status(401).json({
+        message: data.error || 'Invalid token'
+      });
+    }
+
+    // Attach verified user to request
+    req.user = data.user;
+    next();
+  } catch (err) {
+    return res.status(500).json({
+      message: 'Auth server unreachable'
+    });
+  }
+};
+
+module.exports = authMiddleware;</pre>
         </section>
 
         <!-- Section 5: Dual Environments -->
