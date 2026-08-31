@@ -353,9 +353,13 @@
       msgDiv.className = 'ra-message';
       form.appendChild(msgDiv);
 
-      const showMessage = (msg, isError = true) => {
+      const showMessage = (msg, isError = true, isHtml = false) => {
         msgDiv.className = `ra-message ra-show ${isError ? 'error' : 'success'}`;
-        msgDiv.textContent = msg;
+        if (isHtml) {
+          msgDiv.innerHTML = msg;
+        } else {
+          msgDiv.textContent = msg;
+        }
       };
 
       const clearMessage = () => {
@@ -561,14 +565,24 @@
 
         setBtnLoading(registerBtn, true, 'Sign Up');
         try {
-          await this.register(email, password);
-          showMessage('Registration successful! Please verify your email.', false);
-          // Wait a bit and switch to Login tab
+          const res = await this.register(email, password);
+          let successText = 'Registration successful! Please verify your email.';
+          if (res.previewUrl) {
+            successText += `<br><a href="${res.previewUrl}" target="_blank" style="color:#ffb86b; text-decoration:underline; font-weight:600; display:inline-block; margin-top:4px;">📬 Click here to Open Test Email (Ethereal)</a>`;
+            showMessage(successText, false, true);
+          } else {
+            showMessage(successText, false);
+          }
+          // Wait longer if preview URL is available so developer can click it
           setTimeout(() => {
             tabs.querySelector('[data-panel="login"]').click();
             modal.querySelector('#ra-login-email').value = email;
-            showMessage('Verification link sent. Please verify and sign in.', false);
-          }, 2000);
+            if (res.previewUrl) {
+              showMessage(`Verification email sent.<br><a href="${res.previewUrl}" target="_blank" style="color:#ffb86b; text-decoration:underline; font-weight:600; display:inline-block; margin-top:4px;">📬 Click here to Open Test Email (Ethereal)</a>`, false, true);
+            } else {
+              showMessage('Verification link sent. Please verify and sign in.', false);
+            }
+          }, res.previewUrl ? 6000 : 2000);
         } catch (err) {
           showMessage(err.message || 'Registration failed.');
         } finally {
@@ -603,7 +617,13 @@
         setBtnLoading(forgotBtn, true, 'Send Reset Token');
         try {
           const res = await this.forgotPassword(email);
-          showMessage('Reset token has been sent!', false);
+          let msgText = 'Reset token has been sent!';
+          if (res.previewUrl) {
+            msgText += `<br><a href="${res.previewUrl}" target="_blank" style="color:#ffb86b; text-decoration:underline; font-weight:600; display:inline-block; margin-top:4px;">📬 Click here to Open Reset Email (Ethereal)</a>`;
+            showMessage(msgText, false, true);
+          } else {
+            showMessage(msgText, false);
+          }
           if (res.resetToken) {
             forgotPanel.querySelector('#ra-reset-token').value = res.resetToken;
           }

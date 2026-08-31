@@ -331,7 +331,8 @@ registerBtn.addEventListener('click', async () => {
     registerResult.textContent =
       `Registered successfully.\n` +
       (cachedTenantId ? `Tenant ID:\n${cachedTenantId}\n\n` : '') +
-      `Verify email with this token:\n${cachedVerifyToken}`;
+      `Verify email with this token:\n${cachedVerifyToken}` +
+      (data.previewUrl ? `\n\n📬 Ethereal Test Email:\n${data.previewUrl}` : '');
 
     if (cachedTenantId && !tenantId) {
       regTenantId.value = cachedTenantId;
@@ -640,7 +641,8 @@ forgotPasswordBtn.addEventListener('click', async () => {
       return;
     }
 
-    forgotResult.textContent = `Reset token generated (Check console/email fallback):\n${data.resetToken || 'Token sent to your email'}`;
+    forgotResult.textContent = `Reset token generated:\n${data.resetToken || 'Token sent to your email'}` +
+      (data.previewUrl ? `\n\n📬 Ethereal Test Email:\n${data.previewUrl}` : '');
     if (data.resetToken) {
       resetToken.value = data.resetToken;
     }

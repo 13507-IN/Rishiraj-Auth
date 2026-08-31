@@ -12,7 +12,7 @@ const register = asyncHandler(async (req, res) => {
   const { email, password, tenantId, tenantName } = req.body;
   const ip = req.ip;
 
-  const { user, verificationToken } = await authService.register({
+  const { user, verificationToken, previewUrl } = await authService.register({
     email,
     password,
     tenantId,
@@ -29,7 +29,8 @@ const register = asyncHandler(async (req, res) => {
       isVerified: user.isVerified
     },
     message: 'Registration successful. Please verify your email to continue.',
-    verificationToken
+    verificationToken,
+    previewUrl: previewUrl || null
   });
 });
 
@@ -89,19 +90,21 @@ const verifyEmailHandler = asyncHandler(async (req, res) => {
 
 const resendVerificationHandler = asyncHandler(async (req, res) => {
   const { email } = req.body;
-  const token = await resendVerification(email);
+  const result = await resendVerification(email);
   return res.status(200).json({
     message: 'If the account exists, a verification email has been sent.',
-    verificationToken: token || null
+    verificationToken: result?.token || result || null,
+    previewUrl: result?.previewUrl || null
   });
 });
 
 const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
-  const token = await createPasswordReset(email);
+  const result = await createPasswordReset(email);
   return res.status(200).json({
     message: 'If the account exists, a reset email has been sent.',
-    resetToken: token || null
+    resetToken: result?.token || result || null,
+    previewUrl: result?.previewUrl || null
   });
 });
 
