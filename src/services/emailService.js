@@ -106,13 +106,14 @@ const sendMail = async ({ to, subject, html }) => {
       html
     });
 
+    let previewUrl = null;
     if (etherealReady) {
-      const previewUrl = nodemailer.getTestMessageUrl(info);
+      previewUrl = nodemailer.getTestMessageUrl(info) || null;
       console.log(`\n📬 Email Preview for ${to}:`);
       console.log(`   ${previewUrl}\n`);
     }
 
-    return info;
+    return { info, previewUrl };
   } catch (error) {
     console.error('❌ Failed to send email via SMTP:', error.message);
     
@@ -122,7 +123,7 @@ const sendMail = async ({ to, subject, html }) => {
       console.log(`\n📬 [DEV FALLBACK] Simulated Email to ${to}:`);
       console.log(`   Subject: ${subject}`);
       console.log(`   HTML Content:\n${html}\n`);
-      return { messageId: 'simulated-id' };
+      return { info: { messageId: 'simulated-id' }, previewUrl: null };
     }
     throw error;
   }
@@ -136,7 +137,7 @@ const sendVerificationEmail = async (email, token) => {
     token
   });
 
-  await sendMail({
+  return await sendMail({
     to: email,
     subject: '🔐 Verify your email — Rishiraj Auth',
     html
@@ -151,7 +152,7 @@ const sendPasswordResetEmail = async (email, token) => {
     token
   });
 
-  await sendMail({
+  return await sendMail({
     to: email,
     subject: '🔑 Password reset — Rishiraj Auth',
     html

@@ -17,9 +17,9 @@ const createVerificationToken = async (user) => {
     }
   });
 
-  await sendVerificationEmail(user.email, rawToken);
+  const mailRes = await sendVerificationEmail(user.email, rawToken);
 
-  return rawToken;
+  return { token: rawToken, previewUrl: mailRes?.previewUrl || null };
 };
 
 const verifyEmail = async (token) => {

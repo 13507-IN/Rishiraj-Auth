@@ -23,9 +23,9 @@ const createPasswordReset = async (email) => {
     }
   });
 
-  await sendPasswordResetEmail(user.email, rawToken);
+  const mailRes = await sendPasswordResetEmail(user.email, rawToken);
 
-  return rawToken;
+  return { token: rawToken, previewUrl: mailRes?.previewUrl || null };
 };
 
 const resetPassword = async ({ token, newPasswordHash }) => {

@@ -41,9 +41,9 @@ const register = async ({ email, password, tenantId, tenantName, ip }) => {
     }
   });
 
-  const verificationToken = await createVerificationToken(user);
+  const tokenRes = await createVerificationToken(user);
 
-  return { user, verificationToken };
+  return { user, verificationToken: tokenRes?.token || null, previewUrl: tokenRes?.previewUrl || null };
 };
 
 const login = async ({ email, password, ip, deviceId }) => {
