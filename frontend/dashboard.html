@@ -3,24 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Developer Dashboard | Rishiraj Auth</title>
+  <title>Developer Control Suite | Rishiraj-Auth Platform</title>
+  <meta name="description" content="Manage tenant API keys, monitor active sessions, inspect audit logs, and configure security settings." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="dashboard.css" />
+  <link rel="stylesheet" href="sdk/rishiraj-auth-modal.css" />
 </head>
 <body>
+  <!-- Ambient background glow orbs -->
   <div class="bg-orb bg-orb-one"></div>
   <div class="bg-orb bg-orb-two"></div>
 
   <main class="container">
-    <!-- Navigation -->
+    <!-- Header Navigation -->
     <nav class="nav">
-      <div class="brand">
-        <span>Rishiraj-Auth</span>
+      <a href="/" class="brand">
+        <div class="brand-icon">⚡</div>
+        <span class="brand-name">Rishiraj-Auth</span>
         <span class="tag">Developer Suite</span>
-      </div>
+      </a>
       <div class="nav-links">
         <a href="/">Home</a>
         <a href="/console.html">Console</a>
@@ -29,15 +33,15 @@
       </div>
     </nav>
 
-    <!-- Sidebar Toggle (Mobile only) -->
+    <!-- Mobile Drawer Menu Toggle -->
     <button class="sidebar-toggle" id="sidebarToggle">
       <span class="nav-icon">☰</span>
       <span>Menu</span>
     </button>
 
-    <!-- Dashboard Layout -->
+    <!-- Dashboard Main Layout -->
     <div class="dashboard-layout">
-      <!-- Sidebar -->
+      <!-- Sticky Sidebar -->
       <aside class="sidebar" id="dashboardSidebar">
         <div class="sidebar-profile">
           <div class="sidebar-avatar" id="sidebarAvatar">D</div>
@@ -78,26 +82,26 @@
         </ul>
       </aside>
 
-      <!-- Main Content -->
+      <!-- Dashboard Content View Area -->
       <section class="dashboard-main">
-        <!-- Toast Notification Container (injected by JS but styled) -->
+        <!-- Toast Notification Container -->
         <div id="toastContainer" class="toast-container"></div>
 
         <!-- Section: Overview -->
         <div class="dashboard-section active" id="section-overview">
-          <h2 class="section-title">Overview</h2>
-          <p class="section-subtitle">A high-level view of your authentication tenant activity.</p>
+          <h2 class="section-title">Tenant Overview</h2>
+          <p class="section-subtitle">Real-time telemetry and authentication activity summary.</p>
 
-          <!-- Stats Grid -->
+          <!-- Metrics Stats Cards Grid -->
           <div class="stats-grid">
             <div class="stat-card">
               <span class="stat-icon">🔑</span>
-              <p class="stat-label">Total Keys</p>
+              <p class="stat-label">Total Keys Issued</p>
               <h3 class="stat-value" id="stat-total-keys">0</h3>
             </div>
             <div class="stat-card">
               <span class="stat-icon">🟢</span>
-              <p class="stat-label">Active Keys</p>
+              <p class="stat-label">Active API Keys</p>
               <h3 class="stat-value" id="stat-active-keys">0</h3>
             </div>
             <div class="stat-card">
@@ -107,17 +111,17 @@
             </div>
             <div class="stat-card">
               <span class="stat-icon">⚠️</span>
-              <p class="stat-label">Failed Logins</p>
+              <p class="stat-label">Failed Auth Attempts</p>
               <h3 class="stat-value" id="stat-failed-logins">0</h3>
             </div>
           </div>
 
-          <!-- Profile Card -->
+          <!-- User Identity Card -->
           <div class="profile-card">
             <div class="profile-avatar" id="profileAvatar">D</div>
             <div class="profile-info">
               <h3 class="profile-name" id="profileName">Developer</h3>
-              <p class="profile-email" id="profileEmail">loading...</p>
+              <p class="profile-email" id="profileEmail">loading account details...</p>
               <div class="profile-meta">
                 <span>Tenant ID: <strong id="profileTenant">...</strong></span>
                 <span>Role: <strong id="profileRole">...</strong></span>
@@ -126,46 +130,49 @@
             </div>
           </div>
 
-          <!-- Quick Integration Snippet -->
-          <div class="snippet-card card">
-            <div class="snippet-header">
-              <h3>Quick Integration (JavaScript SDK)</h3>
+          <!-- Quick Integration Snippet Box -->
+          <div class="snippet-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 12px;">
+              <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0;">Quick JavaScript Integration</h3>
               <div class="env-toggle">
                 <button class="env-toggle-btn active-dev" id="snippetEnvDev">Development</button>
                 <button class="env-toggle-btn" id="snippetEnvProd">Production</button>
               </div>
             </div>
-            <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 12px;">
-              Copy this snippet to drop Rishiraj-Auth directly into your frontend website.
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 14px;">
+              Copy this snippet to embed the Rishiraj-Auth login modal into any HTML website.
             </p>
-            <pre class="result" style="margin: 0; position: relative;">
-<code id="integrationCode">// Loading SDK and initializing...</code>
-<button class="toggle" id="copySnippetBtn" style="position: absolute; right: 12px; top: 12px;">Copy</button></pre>
+            <div style="position: relative;">
+              <pre class="result" style="margin: 0;"><code id="integrationCode">// Loading SDK initialization script...</code></pre>
+              <button class="toggle" id="copySnippetBtn" style="position: absolute; right: 12px; top: 12px; font-size: 0.8rem;">Copy Snippet</button>
+            </div>
           </div>
         </div>
 
         <!-- Section: API Keys -->
         <div class="dashboard-section" id="section-keys">
-          <h2 class="section-title">API Keys</h2>
-          <p class="section-subtitle">Manage environment isolated access keys for backend authentication.</p>
+          <h2 class="section-title">API Keys Management</h2>
+          <p class="section-subtitle">Issue, monitor, and revoke environment-isolated backend security tokens.</p>
 
-          <!-- Env Select at Top -->
-          <div class="env-toggle" style="margin-bottom: 24px;">
-            <button class="env-toggle-btn active-dev" id="keysEnvDev">Development Mode</button>
-            <button class="env-toggle-btn" id="keysEnvProd">Production Mode</button>
+          <!-- Environment Selector -->
+          <div style="margin-bottom: 24px;">
+            <div class="env-toggle">
+              <button class="env-toggle-btn active-dev" id="keysEnvDev">🟢 Development Mode</button>
+              <button class="env-toggle-btn" id="keysEnvProd">🔵 Production Mode</button>
+            </div>
           </div>
 
           <!-- Create API Key Form -->
           <div class="create-key-form">
-            <h3>Generate new API Key</h3>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 16px;">Generate New Secret API Key</h3>
             <div class="field-grid" style="grid-template-columns: 2fr 1fr auto; gap: 16px; align-items: flex-end;">
               <div>
                 <label>Key Name / Description</label>
-                <input id="newKeyName" type="text" placeholder="e.g. Production Backend Server" />
+                <input id="newKeyName" type="text" placeholder="e.g. Production Microservice Key" />
               </div>
               <div>
-                <label>Scopes</label>
-                <div style="display: flex; gap: 12px; height: 46px; align-items: center; background: #0f1320; border-radius: 12px; padding: 0 16px; border: 1px solid rgba(255,255,255,0.02);">
+                <label>Service Scopes</label>
+                <div style="display: flex; gap: 14px; height: 46px; align-items: center; background: var(--bg-secondary); border-radius: 12px; padding: 0 16px; border: 1px solid var(--card-border);">
                   <label style="display: flex; align-items: center; gap: 6px; margin: 0; font-size: 0.85rem; cursor: pointer;">
                     <input type="checkbox" id="scopeAuth" checked disabled /> Auth
                   </label>
@@ -176,40 +183,48 @@
               </div>
               <button id="createKeyBtn" class="primary" style="height: 46px;">Generate Key</button>
             </div>
-            <!-- New Key Result Display -->
-            <div id="newKeyResult" style="margin-top: 16px; display: none;">
-              <p class="status-label" style="color: var(--success); font-weight: 600;">⚠️ Copy your new API key now. It won't be shown again!</p>
-              <pre class="result" style="position: relative; margin-top: 8px;"><code id="generatedKeyValue">...</code><button class="toggle" id="copyNewKeyBtn" style="position: absolute; right: 12px; top: 12px;">Copy</button></pre>
+
+            <!-- New Key Value Result Display -->
+            <div id="newKeyResult" style="margin-top: 20px; display: none;">
+              <p style="color: var(--success); font-weight: 700; font-size: 0.9rem; margin-bottom: 8px;">
+                ⚠️ Save your API key immediately! It will not be shown again.
+              </p>
+              <div style="position: relative;">
+                <pre class="result" style="margin: 0;"><code id="generatedKeyValue">...</code></pre>
+                <button class="toggle" id="copyNewKeyBtn" style="position: absolute; right: 12px; top: 12px;">Copy Key</button>
+              </div>
             </div>
           </div>
 
-          <!-- Active Keys Table -->
+          <!-- Active Keys Data Table -->
           <div class="table-container">
-            <h3>Active API Keys (<span id="activeKeysCount">0</span>)</h3>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 16px;">
+              Active API Keys (<span id="activeKeysCount">0</span>)
+            </h3>
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Name</th>
+                  <th>Key Name</th>
                   <th>Last 4 Characters</th>
                   <th>Environment</th>
                   <th>Status</th>
                   <th>Created At</th>
-                  <th style="text-align: right;">Action</th>
+                  <th style="text-align: right;">Actions</th>
                 </tr>
               </thead>
               <tbody id="keysTableBody">
                 <tr>
-                  <td colspan="6" class="muted-note" style="text-align: center; padding: 24px;">Loading keys...</td>
+                  <td colspan="6" style="text-align: center; padding: 32px; color: var(--text-muted);">Loading tenant API keys...</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <!-- API Key Playground -->
+          <!-- API Key Playground Card -->
           <div class="playground-card">
-            <h3>API Key Playground</h3>
-            <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 16px;">
-              Quickly test and validate any API key generated for this tenant.
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 6px;">API Key Playground</h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">
+              Validate any API key issued for this tenant and view real-time verification payload.
             </p>
             <div class="field-grid" style="grid-template-columns: 2fr 1fr auto; gap: 16px; align-items: flex-end;">
               <div>
@@ -217,14 +232,14 @@
                 <input id="playgroundKey" type="text" placeholder="Paste your API key here" />
               </div>
               <div>
-                <label>Authentication Style</label>
-                <select id="playgroundMethod" style="width:100%; height:46px; padding:0 14px; border-radius:12px; border:1px solid transparent; background:#0f1320; color:var(--text); font-size:0.95rem; font-family:inherit;">
+                <label>Header / Auth Style</label>
+                <select id="playgroundMethod" style="height: 46px;">
                   <option value="bearer">Authorization: Bearer &lt;key&gt;</option>
                   <option value="x-api-key">x-api-key Header</option>
                   <option value="body">Request Body (apiKey)</option>
                 </select>
               </div>
-              <button id="validateKeyBtn" class="primary" style="height:46px;">Validate Key</button>
+              <button id="validateKeyBtn" class="primary" style="height: 46px;">Validate Key</button>
             </div>
             <div id="playgroundResult" style="margin-top: 16px;"></div>
           </div>
@@ -232,27 +247,27 @@
 
         <!-- Section: Sessions -->
         <div class="dashboard-section" id="section-sessions">
-          <h2 class="section-title">Session Management</h2>
-          <p class="section-subtitle">Monitor and revoke active refresh tokens and login sessions.</p>
+          <h2 class="section-title">Active Device Sessions</h2>
+          <p class="section-subtitle">Monitor logged-in browser devices and revoke session access.</p>
 
           <div class="table-container">
-            <h3>Active Developer Sessions</h3>
-            <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 16px;">
-              These sessions represent browsers or devices logged into this dashboard. Revoking a session will force a logout on that device.
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 12px;">Active Developer Refresh Sessions</h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">
+              Revoking a session immediately invalidates the refresh token and forces a logout on that device.
             </p>
             <div style="display: flex; flex-direction: column; gap: 12px;" id="sessionsListContainer">
-              <div class="muted-note" style="text-align: center; padding: 24px;">Loading sessions...</div>
+              <div style="text-align: center; padding: 32px; color: var(--text-muted);">Loading active sessions...</div>
             </div>
           </div>
         </div>
 
         <!-- Section: Audit Log -->
         <div class="dashboard-section" id="section-audit">
-          <h2 class="section-title">Audit Logs</h2>
-          <p class="section-subtitle">Real-time security and operational event log for your tenant.</p>
+          <h2 class="section-title">Tenant Audit Telemetry</h2>
+          <p class="section-subtitle">Real-time security log stream of authentication events and API key actions.</p>
 
           <div class="table-container">
-            <h3>Security Event Log</h3>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 16px;">Security Event Log</h3>
             <table class="data-table">
               <thead>
                 <tr>
@@ -264,36 +279,36 @@
               </thead>
               <tbody id="auditTableBody">
                 <tr>
-                  <td colspan="4" class="muted-note" style="text-align: center; padding: 24px;">Loading audit logs...</td>
+                  <td colspan="4" style="text-align: center; padding: 32px; color: var(--text-muted);">Loading telemetry logs...</td>
                 </tr>
               </tbody>
             </table>
-            <div class="load-more-row">
-              <button class="primary btn-sm" id="loadMoreAuditBtn" style="display: none;">Load More Logs</button>
+            <div style="display: flex; justify-content: center; margin-top: 20px;">
+              <button class="primary" id="loadMoreAuditBtn" style="display: none; padding: 8px 20px; font-size: 0.85rem;">Load More Events</button>
             </div>
           </div>
         </div>
 
         <!-- Section: Settings -->
         <div class="dashboard-section" id="section-settings">
-          <h2 class="section-title">Account Settings</h2>
-          <p class="section-subtitle">Manage your personal developer profile and credentials.</p>
+          <h2 class="section-title">Developer Profile Settings</h2>
+          <p class="section-subtitle">Update account details, profile name, and password credentials.</p>
 
-          <!-- Update Profile Card -->
+          <!-- Update Profile Form -->
           <div class="settings-card">
-            <h3>Update Profile</h3>
-            <div class="field-grid" style="grid-template-columns: 2fr auto; gap: 16px; align-items: flex-end; margin-bottom: 0;">
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 16px;">Update Developer Name</h3>
+            <div class="field-grid" style="grid-template-columns: 2fr auto; gap: 16px; align-items: flex-end;">
               <div>
-                <label>Your Name</label>
-                <input id="profileNameInput" type="text" placeholder="e.g. John Doe" />
+                <label>Your Display Name</label>
+                <input id="profileNameInput" type="text" placeholder="e.g. Rishiraj Developer" />
               </div>
-              <button id="updateProfileBtn" class="primary" style="height: 46px;">Save Changes</button>
+              <button id="updateProfileBtn" class="primary" style="height: 46px;">Save Name</button>
             </div>
           </div>
 
-          <!-- Change Password Card -->
+          <!-- Change Password Form -->
           <div class="settings-card">
-            <h3>Change Password</h3>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 16px;">Change Password</h3>
             <div class="field-grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
               <div>
                 <label>Current Password</label>
@@ -304,7 +319,7 @@
                 <input id="newPasswordInput" type="password" placeholder="Minimum 8 characters" />
               </div>
             </div>
-            <div class="action-row" style="margin-top: 12px; justify-content: flex-end;">
+            <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
               <button id="changePasswordBtn" class="primary">Change Password</button>
             </div>
           </div>
@@ -316,11 +331,11 @@
   <!-- Global Confirmation Modal Dialog -->
   <div class="modal-overlay" id="confirmModal" style="display: none;">
     <div class="modal-dialog">
-      <h3 id="confirmTitle">Confirm Action</h3>
-      <p id="confirmMessage">Are you sure you want to proceed?</p>
+      <h3 id="confirmTitle" style="font-size: 1.25rem; font-weight: 800; margin-bottom: 8px;">Confirm Action</h3>
+      <p id="confirmMessage" style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 24px;">Are you sure you want to proceed?</p>
       <div style="display: flex; gap: 12px; justify-content: flex-end;">
-        <button id="confirmCancelBtn" style="background: rgba(255,255,255,0.04); border: 1px solid var(--card-border); color: var(--text); padding: 10px 20px; border-radius: 10px; cursor: pointer;">Cancel</button>
-        <button id="confirmYesBtn" class="btn-danger" style="padding: 10px 20px; border-radius: 10px; cursor: pointer; border: none;">Confirm</button>
+        <button id="confirmCancelBtn" class="ghost" style="padding: 10px 20px;">Cancel</button>
+        <button id="confirmYesBtn" style="background: var(--danger); color: white; border: none; padding: 10px 20px; border-radius: var(--radius-md); font-weight: 700; cursor: pointer;">Confirm</button>
       </div>
     </div>
   </div>
