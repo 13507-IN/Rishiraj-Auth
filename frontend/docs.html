@@ -433,46 +433,6 @@ export default function AuthButton() {
     </div>
   </main>
 
-  <script>
-    // Dynamically replace placeholder server URL with actual current origin if docs viewed on server
-    if (window.location.origin && window.location.origin !== 'null' && window.location.protocol !== 'file:') {
-      const currentOrigin = window.location.origin;
-      document.querySelectorAll('pre code, pre.result').forEach(el => {
-        el.innerHTML = el.innerHTML.replaceAll('https://your-auth-server.com', currentOrigin);
-      });
-    }
-
-    // Docs Search Filter
-    const searchInput = document.getElementById('docSearch');
-    const sideNavLinks = document.querySelectorAll('.side-nav a');
-    if (searchInput) {
-      searchInput.addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase();
-        sideNavLinks.forEach(link => {
-          const text = link.textContent.toLowerCase();
-          link.parentElement.style.display = text.includes(query) ? 'block' : 'none';
-        });
-      });
-    }
-
-    // Scrollspy navigation highlight
-    const sections = document.querySelectorAll('section[id]');
-    window.addEventListener('scroll', () => {
-      let current = '';
-      sections.forEach(section => {
-        const sectionTop = section.offsetTop;
-        if (pageYOffset >= (sectionTop - 140)) {
-          current = section.getAttribute('id');
-        }
-      });
-
-      sideNavLinks.forEach(link => {
-        link.classList.remove('active');
-        if (link.getAttribute('href') === `#${current}`) {
-          link.classList.add('active');
-        }
-      });
-    });
-  </script>
+  <script src="/docs.js" defer></script>
 </body>
 </html>

@@ -3,8 +3,14 @@
   'use strict';
 
   // --- Auth Guard ---
-  let accessToken = localStorage.getItem('accessToken');
-  let refreshToken = localStorage.getItem('refreshToken');
+  let accessToken = sessionStorage.getItem('accessToken');
+  let refreshToken = sessionStorage.getItem('refreshToken');
+
+  function clearAuthSession() {
+    sessionStorage.removeItem('accessToken');
+    sessionStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('tenantId');
+  }
 
   if (!accessToken) {
     window.location.href = '/console.html';
@@ -74,18 +80,15 @@
         throw new Error('Refresh token invalid');
       }
 
-      const data = await res.json();
+      const response = await res.json();
+      const data = response.tokens || response;
       accessToken = data.accessToken;
-      if (data.refreshToken) {
-        refreshToken = data.refreshToken;
-        localStorage.setItem('refreshToken', refreshToken);
-      }
-      localStorage.setItem('accessToken', accessToken);
-      console.log('🔄 Session token silently refreshed');
+      refreshToken = data.refreshToken || refreshToken;
+      sessionStorage.setItem('refreshToken', refreshToken);
+      sessionStorage.setItem('accessToken', accessToken);
       return true;
     } catch (err) {
-      console.error('Session refresh failed. Redirecting to login.', err);
-      localStorage.clear();
+      clearAuthSession();
       window.location.href = '/console.html';
       return false;
     }
@@ -215,8 +218,7 @@
 
   // Handle successful login
   auth.onLogin = (user, tokens) => {
-    console.log('User logged in:', user);
-    console.log('Access token:', tokens.accessToken);
+    // Do not write authentication material to the console.
   };
 
   // Open the prebuilt beautiful login modal
@@ -298,11 +300,58 @@
       document.getElementById('profileTenant').textContent = userProfile.tenantId;
       document.getElementById('profileRole').textContent = userProfile.role;
       document.getElementById('profileVerified').textContent = userProfile.isVerified ? '✅ Yes' : '❌ No';
+      const inviteMemberCard = document.getElementById('inviteMemberCard');
+      if (inviteMemberCard) inviteMemberCard.hidden = userProfile.role !== 'ADMIN';
 
       updateSnippet();
     } catch (err) {
       showToast(err.message || 'Failed to fetch user profile.', 'error');
     }
+  }
+
+  const createInviteBtn = document.getElementById('createInviteBtn');
+  if (createInviteBtn) {
+    createInviteBtn.addEventListener('click', async () => {
+      const email = document.getElementById('inviteEmailInput').value.trim();
+      const result = document.getElementById('inviteResult');
+      if (!email || !userProfile?.tenantId) {
+        showToast('Enter the invitee email after your profile has loaded.', 'error');
+        return;
+      }
+
+      createInviteBtn.disabled = true;
+      try {
+        const data = await apiRequest(
+          'POST',
+          `/admin/tenants/${encodeURIComponent(userProfile.tenantId)}/invitations`,
+          { email }
+        );
+        result.style.display = 'block';
+        result.textContent = `Invitation emailed to ${data.invitation.email}\nExpires: ${new Date(data.invitation.expiresAt).toLocaleString()}.`;
+        if (data.previewUrl) {
+          try {
+            const previewUrl = new URL(data.previewUrl);
+            if (previewUrl.protocol === 'https:') {
+              result.append(document.createTextNode('\n\nDevelopment email preview: '));
+              const previewLink = document.createElement('a');
+              previewLink.href = previewUrl.href;
+              previewLink.target = '_blank';
+              previewLink.rel = 'noopener noreferrer';
+              previewLink.textContent = 'Open test email';
+              result.appendChild(previewLink);
+            }
+          } catch (_error) {
+            // Ignore unexpected preview links.
+          }
+        }
+        document.getElementById('inviteEmailInput').value = '';
+        showToast('Invitation email sent.', 'success');
+      } catch (error) {
+        showToast(error.message || 'Could not create invitation.', 'error');
+      } finally {
+        createInviteBtn.disabled = false;
+      }
+    });
   }
 
   // --- Fetch Dashboard Stats ---
@@ -503,7 +552,7 @@
             <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
               <span class="status-badge ${badgeClass}" style="font-size:0.9rem; padding:6px 14px;">${badgeText}</span>
             </div>
-            <pre class="result" style="margin: 0; max-height: 200px; overflow: auto;"><code>${JSON.stringify(data, null, 2)}</code></pre>
+            <pre class="result" style="margin: 0; max-height: 200px; overflow: auto;"><code>${escapeHtml(JSON.stringify(data, null, 2))}</code></pre>
           </div>
         `;
       } catch (err) {
@@ -532,7 +581,7 @@
         card.className = 'session-card';
         
         // Mark current session
-        const isCurrent = localStorage.getItem('refreshToken') === session.id;
+        const isCurrent = sessionStorage.getItem('refreshToken') === session.id;
         const currentLabel = isCurrent ? ` <span class="env-badge env-badge-dev" style="margin-left:8px;">Current Session</span>` : '';
 
         card.innerHTML = `
@@ -563,7 +612,7 @@
 
   // --- Revoke Session ---
   async function handleRevokeSession(sessionId) {
-    const isCurrent = localStorage.getItem('refreshToken') === sessionId;
+    const isCurrent = sessionStorage.getItem('refreshToken') === sessionId;
     let message = 'Are you sure you want to end this login session? This device will be forced to log in again.';
     
     if (isCurrent) {
@@ -578,7 +627,7 @@
       showToast('Session ended successfully.', 'success');
       
       if (isCurrent) {
-        localStorage.clear();
+        clearAuthSession();
         window.location.href = '/console.html';
       } else {
         fetchSessions();
@@ -708,8 +757,8 @@
         showToast('Current and new password are required.', 'error');
         return;
       }
-      if (newPassword.length < 8) {
-        showToast('New password must be at least 8 characters long.', 'error');
+      if (newPassword.length < 12) {
+        showToast('New password must be at least 12 characters long.', 'error');
         return;
       }
 
@@ -723,7 +772,7 @@
         
         // Silently re-authenticate or logout
         setTimeout(() => {
-          localStorage.clear();
+          clearAuthSession();
           window.location.href = '/console.html';
         }, 1500);
       } catch (err) {

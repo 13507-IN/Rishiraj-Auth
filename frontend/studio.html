@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Get started · Rishi Auth</title>
+<meta name="description" content="A guided home for your authentication. Personalize your sign-in page, connect providers, and own your data.">
+<link rel="stylesheet" href="/studio.css"></head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="studio-shell">
+  <aside class="studio-sidebar">
+    <a href="/" class="logo"><span class="logo-mark">r.</span> Rishi Auth</a>
+    <div class="workspace-label"><small>Your workspace</small><strong id="workspaceName">Loading workspace…</strong></div>
+    <nav class="studio-nav" aria-label="Setup navigation">
+      <a href="#welcome" class="active"><span class="nav-num">01</span>Get started</a>
+      <a href="#appearance"><span class="nav-num">02</span>Sign-in page</a>
+      <a href="#providers"><span class="nav-num">03</span>Sign-in methods</a>
+      <a href="#database"><span class="nav-num">04</span>Your database</a>
+      <a href="#launch"><span class="nav-num">05</span>Add to your app</a>
+    </nav>
+    <div class="sidebar-foot">A little setup. A better welcome.<a href="/dashboard.html">Sessions, API keys & activity ↗</a><a href="/docs.html">Developer documentation ↗</a></div>
+  </aside>
+  <div class="studio-main">
+    <header class="studio-topbar"><span>Workspace / <strong id="breadcrumb">Get started</strong></span>
+      <div class="actions"><span id="serverStatus" class="status-pill">Checking service</span><button class="button text" id="signOut">Sign out</button></div>
+    </header>
+    <main class="studio-content" id="main">
+      <div id="pageError" class="notice error" role="alert" hidden></div>
+      <div id="loading" class="panel" role="status">Getting your workspace ready…</div>
+      <div id="setupContent" hidden>
+      <section data-view="welcome">
+        <div class="section-head"><div><span class="eyebrow">Make yourself at home</span><h1>Good things start here.</h1><p>Give your users a welcoming sign-in experience. We’ll walk you through it, one step at a time.</p></div><a class="button" href="/dashboard.html">Open dashboard ↗</a></div>
+        <div class="panel welcome-panel"><span class="eyebrow">Your setup checklist</span><h2>A sign-in experience that feels like your product.</h2><p class="muted">Start with your style. Connect a provider when you’re ready.</p><div class="progress"><span id="setupProgress"></span></div><small class="muted" id="progressText">Loading progress</small></div>
+        <div class="panel step-list">
+          <div class="step"><span class="step-icon">1</span><div><h3>Make it yours</h3><p>Your brand, your words, your colors. Preview changes instantly.</p></div><a class="button" href="#appearance">Customize page →</a></div>
+          <div class="step"><span class="step-icon">2</span><div><h3>Choose how people sign in</h3><p>Guided setup for Google, GitHub, and Facebook.</p></div><a class="button" href="#providers">Set up providers →</a></div>
+          <div class="step"><span class="step-icon">3</span><div><h3>Know where your data lives</h3><p>Keep authentication data in a PostgreSQL database you control.</p></div><a class="button" href="#database">Explore data setup →</a></div>
+          <div class="step"><span class="step-icon">4</span><div><h3>Bring it to your app</h3><p>Publish a sign-in page or integrate the JavaScript SDK.</p></div><a class="button" href="#launch">Get integration code →</a></div>
+        </div>
+        <div class="grid-2"><div class="mini-card"><span class="eyebrow">Clear by design</span><h3>No guessing what’s connected.</h3><p class="muted">Provider setup and personal account connections have separate statuses, so you always know the next step.</p></div><div class="mini-card"><span class="eyebrow">Yours to run</span><h3>Your users. Your database.</h3><p class="muted">Self-host Rishi Auth with your own PostgreSQL connection. Credentials stay in your server configuration.</p></div></div>
+      </section>
+      <section data-view="appearance" hidden>
+        <div class="section-head"><div><span class="eyebrow">Your first impression</span><h1>Make your welcome, yours.</h1><p>Customize your hosted sign-in landing page. Your preview updates as you type.</p></div><span id="saveState" class="badge pending">Not saved yet</span></div>
+        <div id="ownerNotice" class="notice" hidden>You can preview this page. Publishing is available to the workspace owner or platform administrator.</div>
+        <div class="builder">
+          <form id="brandForm" class="panel">
+            <div class="field"><label for="brandName">Brand name</label><input id="brandName" name="brandName" maxlength="60" minlength="2" required></div>
+            <div class="field"><label for="headline">Welcome headline</label><input id="headline" name="headline" maxlength="100" minlength="2" required></div>
+            <div class="field"><label for="description">A few welcoming words</label><textarea id="description" name="description" maxlength="240"></textarea><small>Keep it helpful and human. Up to 240 characters.</small></div>
+            <fieldset><legend>Accent color</legend><div class="swatches">
+              <label class="swatch"><input type="radio" name="accent" value="violet" checked>Violet</label>
+              <label class="swatch"><input type="radio" name="accent" value="blue">Blue</label>
+              <label class="swatch"><input type="radio" name="accent" value="emerald">Green</label>
+              <label class="swatch"><input type="radio" name="accent" value="rose">Rose</label>
+            </div></fieldset>
+            <div class="field"><label for="layout">Page layout</label><select id="layout" name="layout"><option value="split">Brand story + sign-in</option><option value="centered">Focused, centered card</option></select></div>
+            <fieldset><legend>Show these sign-in options</legend><label><input type="checkbox" name="provider" value="google" checked>Google</label><label><input type="checkbox" name="provider" value="github" checked>GitHub</label><label><input type="checkbox" name="provider" value="facebook" checked>Facebook</label><small>Only configured providers appear on the published page. Email sign-in is always available.</small></fieldset>
+            <div class="field"><label><input id="published" type="checkbox" name="published">Publish my sign-in page</label><small>Uncheck and save to take the public page offline.</small></div>
+            <div class="actions"><button type="submit" class="button primary" id="savePage">Save changes</button><button type="button" class="button" id="resetPage">Undo changes</button></div>
+            <p id="saveFeedback" class="muted" role="status"></p>
+          </form>
+          <aside class="preview-frame" aria-label="Live preview">
+            <div class="preview-bar"><span>● ● ● &nbsp; LIVE PREVIEW</span><span id="previewLayout">Brand story + sign-in</span></div>
+            <div class="preview-card" id="previewCard"><div class="logo"><span class="logo-mark">r.</span><span id="previewBrand"></span></div>
+              <h2 id="previewHeadline"></h2><p id="previewDescription"></p><div id="previewProviders"></div><div class="divider">or use your email</div><div class="fake-input">you@example.com</div><div class="fake-input">Your password</div><div class="fake-button">Sign in →</div><div class="auth-foot">Your account, protected by Rishi Auth</div>
+            </div><p class="auth-foot">Preview only. Save and publish to make your page available.</p>
+          </aside>
+        </div>
+      </section>
+      <section data-view="providers" hidden>
+        <div class="section-head"><div><span class="eyebrow">Familiar ways to sign in</span><h1>One less password to remember.</h1><p>Set up a provider for this server, then connect your own account to try it.</p></div><button class="button" id="refreshSetup">Recheck setup ↻</button></div>
+        <div class="notice">First-time users create and verify an email account, then connect a provider here. Future visits can use one-click social sign-in. This prevents accidental account merging.</div>
+        <div id="providerGuides"></div>
+      </section>
+      <section data-view="database" hidden>
+        <div class="section-head"><div><span class="eyebrow">Data you control</span><h1>A home for your users.</h1><p>Rishi Auth stores accounts, sessions, page settings, and activity in PostgreSQL.</p></div><span class="badge" id="databaseStatus">Checking database</span></div>
+        <div class="panel"><h2>Use your own PostgreSQL database</h2><p class="muted">This is a server-level setting. All workspaces on one Rishi Auth deployment use the same database, with workspace access checks. For a separate physical database, run your own deployment.</p>
+          <ol class="guide-list"><li><strong>Create an empty PostgreSQL database.</strong><br>Use a local PostgreSQL server or a hosted PostgreSQL service. Create a database user dedicated to Rishi Auth.</li><li><strong>Set the connection on your server.</strong><br>Place this in the server’s <code>.env</code> file. Replace the placeholders and use your provider’s required TLS settings. Never put it in browser code.<pre>DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/DATABASE?sslmode=require</pre></li><li><strong>Prepare the tables.</strong><br>Back up existing data before changing databases. Run these commands from the project folder, with your intended database selected.<pre>npm ci
+npm run build
+npx prisma migrate deploy
+npm start</pre></li><li><strong>Check the connection.</strong><br>Open <code>/health</code>, then register a test account and check its record in your database. A health response alone does not test the complete sign-in flow.</li></ol>
+          <a class="button" href="https://www.prisma.io/docs/orm/prisma-migrate/workflows/development-and-production" target="_blank" rel="noopener noreferrer">Database migration guide ↗</a>
+        </div>
+        <div class="panel"><h2>Already have an application database?</h2><p class="muted">Keep your application’s business data there. Your backend can verify a Rishi Auth access token with <code>POST /auth/verify-token</code> and store the returned user ID alongside its own records. Check <code>valid</code> and the expected workspace before granting access.</p><div class="notice">There is no automatic sync to another database. Password hashes, refresh tokens, and provider secrets should never be copied into your frontend.</div><a class="button" href="/docs.html">Read the API reference →</a></div>
+      </section>
+      <section data-view="launch" hidden>
+        <div class="section-head"><div><span class="eyebrow">Ready when you are</span><h1>Meet your new front door.</h1><p>Try your hosted page, or add authentication directly to your app.</p></div></div>
+        <div class="panel"><h2>Your hosted sign-in page</h2><p class="muted">This page signs users into this Rishi Auth workspace. Use the SDK below for sign-in inside your own application.</p><div id="publishNotice" class="notice">Publish your page in the page editor first.</div><div class="copy-row"><code id="pageUrl"></code><button class="button" id="copyPage">Copy link</button><a class="button primary" id="openPage" target="_blank" rel="noopener">Open page ↗</a></div></div>
+        <div class="panel"><h2>Add the SDK to your website</h2><p class="muted">Add your website’s exact origin to <code>ALLOWED_ORIGINS</code> on the server and restart it. Keep the SDK tokens in memory. Your backend must verify tokens before returning private data.</p><pre id="sdkSnippet"></pre><button class="button" id="copySdk">Copy starter code</button></div>
+        <div class="panel"><h2>Before inviting real users</h2><ol class="guide-list"><li>Configure email delivery and test verification and password recovery.</li><li>Test each connected provider with a test user in the provider’s developer console.</li><li>For production, use HTTPS, strong secrets, Redis, and a backed-up database.</li><li>Try sign-in, sign-out, and a revoked session from a second browser.</li></ol><a href="/dashboard.html" class="button">View sessions & activity →</a></div>
+      </section>
+      </div>
+    </main>
+  </div>
+</div>
+<div id="toast" class="toast" role="status" hidden></div>
+<script src="/sdk/rishiraj-auth.js"></script><script src="/studio.js"></script>
+</body></html>

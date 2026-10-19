@@ -294,6 +294,21 @@
           <h2 class="section-title">Developer Profile Settings</h2>
           <p class="section-subtitle">Update account details, profile name, and password credentials.</p>
 
+          <div class="settings-card" id="inviteMemberCard" hidden>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 8px;">Invite a Workspace Member</h3>
+            <p style="color: var(--text-muted); margin: 0 0 16px;">
+              Invitations are emailed to the exact address, expire after 7 days, and can be accepted once.
+            </p>
+            <div class="field-grid" style="grid-template-columns: 2fr auto; gap: 16px; align-items: flex-end;">
+              <div>
+                <label>Member Email</label>
+                <input id="inviteEmailInput" type="email" autocomplete="off" placeholder="person@company.com" />
+              </div>
+              <button id="createInviteBtn" class="primary" style="height: 46px;">Create Invitation</button>
+            </div>
+            <pre id="inviteResult" class="result" style="display: none; margin-top: 16px;" aria-live="polite"></pre>
+          </div>
+
           <!-- Update Profile Form -->
           <div class="settings-card">
             <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 16px;">Update Developer Name</h3>
@@ -316,7 +331,7 @@
               </div>
               <div>
                 <label>New Password</label>
-                <input id="newPasswordInput" type="password" placeholder="Minimum 8 characters" />
+                <input id="newPasswordInput" type="password" placeholder="At least 12 characters" />
               </div>
             </div>
             <div style="display: flex; justify-content: flex-end; margin-top: 16px;">

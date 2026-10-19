@@ -49,8 +49,8 @@
         <label style="font-size: 0.75rem; margin-bottom: 4px;">Current Tenant ID</label>
         <input id="currentTenant" class="status-input" type="text" placeholder="Not set yet" readonly style="font-family: var(--font-code); font-size: 0.8rem; margin-bottom: 12px; background: #030712;" />
         
-        <label style="font-size: 0.75rem; margin-bottom: 4px;">Current Access Token</label>
-        <input id="currentAccess" class="status-input" type="text" placeholder="Not set yet" readonly style="font-family: var(--font-code); font-size: 0.8rem; background: #030712;" />
+        <label style="font-size: 0.75rem; margin-bottom: 4px;">Current Access Token (masked)</label>
+        <input id="currentAccess" class="status-input" type="password" placeholder="Not set yet" readonly autocomplete="off" style="font-family: var(--font-code); font-size: 0.8rem; background: #030712;" />
       </div>
     </header>
 
@@ -88,19 +88,19 @@
         <div>
           <label>Password</label>
           <div class="input-with-toggle">
-            <input id="regPassword" type="password" placeholder="Minimum 8 characters" />
+            <input id="regPassword" type="password" placeholder="At least 12 characters" />
             <button class="toggle" type="button" data-toggle="regPassword">Show</button>
           </div>
         </div>
       </div>
       <div class="field-grid">
         <div>
-          <label>Tenant Name</label>
+          <label>New Workspace Name</label>
           <input id="regTenantName" type="text" placeholder="Acme Software Corp" />
         </div>
         <div>
-          <label>Existing Tenant ID (Optional)</label>
-          <input id="regTenantId" type="text" placeholder="Paste existing UUID if joining" />
+          <label>Workspace Invitation Token</label>
+          <input id="regInviteToken" type="password" autocomplete="off" placeholder="Paste a one-time invitation token" />
         </div>
       </div>
       <div class="action-row">
@@ -305,7 +305,7 @@
         <div>
           <label>New Password</label>
           <div class="input-with-toggle">
-            <input id="newPassword" type="password" placeholder="Minimum 8 characters" />
+            <input id="newPassword" type="password" placeholder="At least 12 characters" />
             <button class="toggle" type="button" data-toggle="newPassword">Show</button>
           </div>
         </div>
