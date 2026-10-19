@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rishiraj-Auth — Enterprise Authentication-as-a-Service Platform</title>
-  <meta name="description" content="Drop-in cross-origin authentication modal, isolated dev/prod environments, real-time audit logs, and SDK for modern SaaS." />
+  <title>Rishi Auth — A more welcoming sign-in</title>
+  <meta name="description" content="Create a friendly sign-in page for your product. Keep your PostgreSQL data on your own server and set up Google, GitHub, and Facebook sign-in." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -21,12 +21,12 @@
     <nav class="nav">
       <a href="/" class="brand">
         <div class="brand-icon">⚡</div>
-        <span class="brand-name">Rishiraj-Auth</span>
-        <span class="tag">Auth-as-a-Service</span>
+        <span class="brand-name">Rishi Auth</span>
+        <span class="tag">Authentication made friendly</span>
       </a>
       <div class="nav-links">
         <a href="/" class="active">Home</a>
-        <a href="/console.html">Console</a>
+        <a href="/studio.html">Get started</a>
         <a href="/docs.html">Docs</a>
         <a href="/dashboard.html">Dashboard</a>
       </div>
@@ -35,15 +35,15 @@
     <!-- Hero Section -->
     <header class="hero hero-split" style="margin-bottom: 64px;">
       <div>
-        <div class="eyebrow">Enterprise Identity Infrastructure</div>
-        <h1>Drop-in Authentication for Modern Web Apps.</h1>
+        <div class="eyebrow">A friendlier first hello</div>
+        <h1>Welcome your users like you mean it.</h1>
         <p class="subtitle" style="margin-bottom: 36px;">
-          Plug in a stunning cross-origin Auth Modal, toggle isolated environments, monitor real-time audit logs, and secure your REST & GraphQL APIs in minutes.
+          Make a sign-in page that feels like your product. Set up familiar sign-in methods with clear instructions, and keep your users’ data in a PostgreSQL database you control.
         </p>
         <div class="action-row">
-          <a class="primary-link" href="/dashboard.html">Go to Dashboard →</a>
-          <button class="ghost-link" id="demoModalTrigger" style="border-color: rgba(99, 102, 241, 0.4); color: #818cf8;">✨ Try Live Modal Demo</button>
-          <a class="ghost-link" href="/console.html">Developer Console</a>
+          <a class="primary-link" href="/login.html?mode=register">Create your workspace →</a>
+          <a class="ghost-link" href="/studio.html">Explore guided setup</a>
+          <a class="ghost-link" href="/docs.html">How it works</a>
         </div>
       </div>
 
@@ -55,51 +55,53 @@
             <span class="dot dot-yellow"></span>
             <span class="dot dot-green"></span>
           </div>
-          <span class="window-title">index.html — Integration Snippet</span>
+          <span class="window-title">A simple way to welcome people</span>
           <button class="toggle" id="copyHeroCodeBtn" style="padding: 4px 10px; font-size: 0.75rem;">Copy</button>
         </div>
-        <pre class="code-preview"><code id="heroCodeSnippet"><span class="comment">&lt;!-- 1. Include SDK Script --&gt;</span>
-&lt;<span class="keyword">script</span> <span class="string">src="/sdk/rishiraj-auth.js"</span>&gt;&lt;/<span class="keyword">script</span>&gt;
+        <pre class="code-preview"><code id="heroCodeSnippet"><span class="comment">&lt;!-- Start with the SDK --&gt;</span>
+&lt;<span class="keyword">script</span> <span class="string">src="https://your-auth-server.example/sdk/rishiraj-auth.js"</span>&gt;&lt;/<span class="keyword">script</span>&gt;
+&lt;<span class="keyword">button</span> <span class="keyword">id</span>=<span class="string">"signIn"</span>&gt;Sign in&lt;/<span class="keyword">button</span>&gt;
 
-<span class="comment">&lt;!-- 2. Initialize Auth Instance --&gt;</span>
 &lt;<span class="keyword">script</span>&gt;
   <span class="keyword">const</span> auth = <span class="keyword">new</span> <span class="function">RishirajAuth</span>({
-    tenantId: <span class="string">"your-tenant-uuid"</span>,
-    environment: <span class="string">"DEVELOPMENT"</span>,
-    onLogin: (user, tokens) => {
-      console.log(<span class="string">"Welcome back!"</span>, user);
+    serverUrl: <span class="string">"https://your-auth-server.example"</span>,
+    tenantId: <span class="string">"your-workspace-id"</span>,
+    onLogin: async (_user, tokens) => {
+      <span class="comment">// Send the access token to your own backend.</span>
+      <span class="comment">// Never log it or store it in localStorage.</span>
     }
   });
+  document.getElementById(<span class="string">"signIn"</span>).addEventListener(
+    <span class="string">"click"</span>, () => auth.showLoginModal()
+  );
 &lt;/<span class="keyword">script</span>&gt;
 
-<span class="comment">&lt;!-- 3. Trigger Modal Anywhere --&gt;</span>
-&lt;<span class="keyword">button</span> <span class="function">onclick</span>=<span class="string">"auth.showLoginModal()"</span>&gt;Sign In&lt;/<span class="keyword">button</span>&gt;</code></pre>
+</code></pre>
       </div>
     </header>
 
     <!-- Workflow Steps Card -->
     <section class="card" style="margin-bottom: 56px;">
       <div class="step-header">
-        <span class="step-badge">Integration Flow</span>
+        <span class="step-badge">Your first steps</span>
         <div>
-          <h2>A complete identity stack at your fingertips</h2>
-          <p>We provide isolated multi-tenant databases, email verification gates, secure JWT session caching, and full developer telemetry.</p>
+          <h2>Four steps. Your own sign-in experience.</h2>
+          <p>Start with your workspace, personalize the welcome, connect a provider, then add the sign-in flow to your app.</p>
         </div>
       </div>
 
       <div class="workflow" style="margin-top: 28px;">
-        <div class="workflow-step"><span>1</span><p>Create Tenant & Account</p></div>
-        <div class="workflow-step"><span>2</span><p>Configure Dev / Prod</p></div>
-        <div class="workflow-step"><span>3</span><p>Generate API Keys</p></div>
-        <div class="workflow-step"><span>4</span><p>Embed JavaScript SDK</p></div>
-        <div class="workflow-step"><span>5</span><p>Real-time Audit Logs</p></div>
+        <div class="workflow-step"><span>1</span><p>Create an account</p></div>
+        <div class="workflow-step"><span>2</span><p>Personalize your page</p></div>
+        <div class="workflow-step"><span>3</span><p>Connect a sign-in method</p></div>
+        <div class="workflow-step"><span>4</span><p>Welcome your users</p></div>
       </div>
     </section>
 
     <!-- Features Section Header -->
     <div style="text-align: center; margin-top: 72px; margin-bottom: 48px;">
-      <span class="eyebrow" style="margin-bottom: 12px;">Built for Developers</span>
-      <h2 style="font-size: 2.4rem; font-weight: 800; letter-spacing: -0.02em;">Explore Platform Features</h2>
+      <span class="eyebrow" style="margin-bottom: 12px;">Made for teams and makers</span>
+      <h2 style="font-size: 2.4rem; font-weight: 800; letter-spacing: -0.02em;">Everything in one calm workspace</h2>
       <p style="color: var(--text-muted); max-width: 620px; margin: 12px auto 0; font-size: 1.05rem;">
         Everything you need to secure multi-tenant SaaS applications without reinventing security logic.
       </p>
@@ -109,25 +111,25 @@
     <div class="features-grid" style="margin-bottom: 72px;">
       <div class="feature-card">
         <div class="feature-icon-wrapper">🚀</div>
-        <h3>Embeddable Client SDK</h3>
+        <h3>A sign-in flow you can style</h3>
         <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">
-          Lightweight script with prebuilt dark-mode login & registration modal, Google OAuth integration, auto silent token refreshes, and state event emitters.
+          Preview the welcome page, choose an accent, set up familiar providers, and copy a small SDK starter for your own app.
         </p>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon-wrapper">🛡️</div>
-        <h3>Dual Isolated Environments</h3>
+        <h3>Your data, your PostgreSQL</h3>
         <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">
-          Every tenant gets segregated <strong>Development</strong> and <strong>Production</strong> spaces. Safely isolate keys, user tables, audit logs, and security policies.
+          Self-host Rishi Auth with a PostgreSQL database you control. Workspace access checks keep each customer’s data separate.
         </p>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon-wrapper">📊</div>
-        <h3>Developer Control Room</h3>
+        <h3>Know what’s happening</h3>
         <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">
-          A sleek unified dashboard to inspect active user sessions, rotate security keys with instant revocation, and test API endpoints in the interactive key playground.
+          Manage API keys and sessions, review sign-in activity, and find clear setup status for your integrations.
         </p>
       </div>
     </div>
@@ -135,56 +137,18 @@
     <!-- CTA Highlight Banner -->
     <section class="card highlight" style="display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;">
       <div>
-        <h2 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 8px;">Build something extraordinary today.</h2>
-        <p style="color: var(--text-muted); font-size: 1.05rem;">Get started with our developer dashboard or read the integration manual.</p>
+        <h2 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 8px;">Ready to make sign-in feel like yours?</h2>
+        <p style="color: var(--text-muted); font-size: 1.05rem;">We’ll guide you through it. No auth jargon required.</p>
       </div>
       <div class="action-row" style="margin: 0;">
-        <a class="primary-link" href="/dashboard.html">View Developer Dashboard →</a>
-        <a class="ghost-link" href="/docs.html">Read the Docs</a>
+        <a class="primary-link" href="/login.html?mode=register">Create your workspace →</a>
+        <a class="ghost-link" href="/studio.html">Explore guided setup</a>
       </div>
     </section>
   </main>
 
   <!-- Load SDK Script for Interactive Demo Modal -->
   <script src="/sdk/rishiraj-auth.js"></script>
-  <script>
-    // Initialize Demo Auth SDK for live homepage testing
-    let demoAuthInstance = null;
-    try {
-      demoAuthInstance = new RishirajAuth({
-        tenantId: "demo-tenant-id",
-        environment: "DEVELOPMENT",
-        onLogin: (user, tokens) => {
-          console.log("Demo Login Success:", user);
-        }
-      });
-    } catch (e) {
-      console.log("SDK preview initialized");
-    }
-
-    const demoModalBtn = document.getElementById('demoModalTrigger');
-    if (demoModalBtn) {
-      demoModalBtn.addEventListener('click', () => {
-        if (demoAuthInstance && typeof demoAuthInstance.showLoginModal === 'function') {
-          demoAuthInstance.showLoginModal();
-        } else {
-          alert("Click Developer Console or Dashboard to get started!");
-        }
-      });
-    }
-
-    // Code snippet copy handler
-    const copyHeroBtn = document.getElementById('copyHeroCodeBtn');
-    if (copyHeroBtn) {
-      copyHeroBtn.addEventListener('click', async () => {
-        const codeText = `<script src="/sdk/rishiraj-auth.js"><\/script>\n<script>\n  const auth = new RishirajAuth({\n    tenantId: "your-tenant-uuid",\n    environment: "DEVELOPMENT",\n    onLogin: (user, tokens) => {\n      console.log("Welcome back!", user);\n    }\n  });\n<\/script>\n<button onclick="auth.showLoginModal()">Sign In</button>`;
-        try {
-          await navigator.clipboard.writeText(codeText);
-          copyHeroBtn.textContent = 'Copied!';
-          setTimeout(() => { copyHeroBtn.textContent = 'Copy'; }, 2000);
-        } catch (e) {}
-      });
-    }
-  </script>
+  <script src="/home.js" defer></script>
 </body>
 </html>
