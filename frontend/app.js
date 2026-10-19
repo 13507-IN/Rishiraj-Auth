@@ -11,7 +11,7 @@ const registerResult = document.getElementById('registerResult');
 const regEmail = document.getElementById('regEmail');
 const regPassword = document.getElementById('regPassword');
 const regTenantName = document.getElementById('regTenantName');
-const regTenantId = document.getElementById('regTenantId');
+const regInviteToken = document.getElementById('regInviteToken');
 
 const verifyBtn = document.getElementById('verifyBtn');
 const verifyResult = document.getElementById('verifyResult');
@@ -54,11 +54,27 @@ const resetPasswordBtn = document.getElementById('resetPasswordBtn');
 const resetResult = document.getElementById('resetResult');
 
 // App state
-let cachedTenantId = localStorage.getItem('tenantId') || '';
+try {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+} catch (_error) {
+  // Web storage may be disabled; authentication can still run in memory.
+}
+let cachedTenantId = sessionStorage.getItem('tenantId') || '';
 let cachedVerifyToken = '';
-let cachedAccessToken = localStorage.getItem('accessToken') || '';
+let cachedAccessToken = sessionStorage.getItem('accessToken') || '';
 let cachedApiKey = '';
 let currentEnv = 'DEVELOPMENT'; // default environment
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[char]);
+}
 
 // Toast helper
 function showToast(message, type = 'info') {
@@ -84,8 +100,8 @@ function confirmAction(title, message, onConfirm) {
   overlay.className = 'modal-overlay';
   overlay.innerHTML = `
     <div class="modal-dialog">
-      <h3>${title}</h3>
-      <p>${message}</p>
+      <h3>${escapeHtml(title)}</h3>
+      <p>${escapeHtml(message)}</p>
       <div class="action-row" style="margin-top:20px; justify-content:flex-end; gap:12px;">
         <button class="ghost btn-sm" id="cancelModalBtn">Cancel</button>
         <button class="primary btn-danger btn-sm" id="confirmModalBtn">Confirm Revocation</button>
@@ -148,8 +164,7 @@ const maskKey = (last4) => {
   return `•••• •••• •••• ${last4}`;
 };
 
-// Global function exposed for onclick key revocation
-window.revokeKey = function(keyId) {
+const revokeKey = function(keyId) {
   const token = accessTokenInput.value.trim() || cachedAccessToken;
   if (!token) {
     showToast('Please log in or provide an access token first.', 'error');
@@ -201,23 +216,27 @@ const renderKeys = (keys) => {
         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
           <div>
             <h3 style="margin:0; font-size:1.1rem; display:inline-flex; align-items:center; gap:8px;">
-              ${key.name}
-              <span class="env-badge ${envClass}">${key.environment}</span>
+              ${escapeHtml(key.name)}
+              <span class="env-badge ${envClass}">${escapeHtml(key.environment)}</span>
             </h3>
             <p class="muted-note" style="margin:4px 0 0;">Created ${formatDate(key.createdAt)}</p>
           </div>
           <div style="display:flex; gap:8px; align-items:center;">
             <span class="status-badge ${statusClass}">${statusText}</span>
-            ${!isRevoked ? `<button class="btn-danger btn-sm" style="padding:4px 10px;" onclick="revokeKey('${key.id}')">Revoke</button>` : ''}
+            ${!isRevoked ? `<button class="btn-danger btn-sm" style="padding:4px 10px;" data-key-id="${escapeHtml(key.id)}">Revoke</button>` : ''}
           </div>
         </div>
         <div class="key-meta" style="margin-top:12px; display:flex; justify-content:space-between; color:var(--muted); font-size:0.85rem;">
           <span>${maskKey(key.last4)}</span>
-          <span>Services: ${services}</span>
+          <span>Services: ${escapeHtml(services)}</span>
         </div>
       </div>
     `;
   }).join('');
+
+  keysList.querySelectorAll('button[data-key-id]').forEach((button) => {
+    button.addEventListener('click', () => revokeKey(button.dataset.keyId));
+  });
 };
 
 // Form toggles
@@ -274,24 +293,27 @@ googleLoginButton.addEventListener('click', () => {
   }
 
   // Save tenantId for later
-  localStorage.setItem('tenantId', tenantId);
+  sessionStorage.setItem('tenantId', tenantId);
   cachedTenantId = tenantId;
   setStatusInputs();
   
-  // Use popup or redirect based on user requirements. Here we do redirect
-  window.location.href = `/auth/google?tenantId=${encodeURIComponent(tenantId)}&redirect=true`;
+  const params = new URLSearchParams({
+    tenantId,
+    clientOrigin: window.location.origin
+  });
+  window.location.assign(`/auth/google?${params.toString()}`);
 });
 
 // Register
 registerBtn.addEventListener('click', async () => {
   const email = regEmail.value.trim();
-  const password = regPassword.value.trim();
+  const password = regPassword.value;
   const tenantName = regTenantName.value.trim();
-  const tenantId = regTenantId.value.trim();
+  const inviteToken = regInviteToken.value.trim();
 
-  if (!email || !password || (!tenantName && !tenantId)) {
-    showToast('Email, password, and tenant name or tenant ID are required.', 'error');
-    registerResult.textContent = 'Email, password, and tenant name or tenant ID are required.';
+  if (!email || !password || password.length < 12 || (!tenantName && !inviteToken) || (tenantName && inviteToken)) {
+    showToast('Use a 12-character password and enter either a new workspace name or an invitation token.', 'error');
+    registerResult.textContent = 'Use a 12-character password and enter either a new workspace name or an invitation token.';
     return;
   }
 
@@ -308,7 +330,7 @@ registerBtn.addEventListener('click', async () => {
         email,
         password,
         tenantName: tenantName || undefined,
-        tenantId: tenantId || undefined
+        inviteToken: inviteToken || undefined
       })
     });
 
@@ -324,18 +346,20 @@ registerBtn.addEventListener('click', async () => {
 
     cachedTenantId = data.user && data.user.tenantId ? data.user.tenantId : '';
     cachedVerifyToken = data.verificationToken || '';
-    localStorage.setItem('tenantId', cachedTenantId);
+    regInviteToken.value = '';
+    sessionStorage.setItem('tenantId', cachedTenantId);
     setStatusInputs();
     showToast('Registered successfully! Verify email to continue.', 'success');
 
     registerResult.textContent =
       `Registered successfully.\n` +
       (cachedTenantId ? `Tenant ID:\n${cachedTenantId}\n\n` : '') +
-      `Verify email with this token:\n${cachedVerifyToken}` +
+      (cachedVerifyToken
+        ? `Verify email with this token:\n${cachedVerifyToken}`
+        : 'Check your email for the verification token.') +
       (data.previewUrl ? `\n\n📬 Ethereal Test Email:\n${data.previewUrl}` : '');
 
-    if (cachedTenantId && !tenantId) {
-      regTenantId.value = cachedTenantId;
+    if (cachedTenantId && !tenantName) {
       tenantIdInput.value = cachedTenantId;
     }
 
@@ -390,7 +414,7 @@ verifyBtn.addEventListener('click', async () => {
 // Login
 loginBtn.addEventListener('click', async () => {
   const email = loginEmail.value.trim();
-  const password = loginPassword.value.trim();
+  const password = loginPassword.value;
 
   if (!email || !password) {
     showToast('Email and password are required.', 'error');
@@ -423,12 +447,12 @@ loginBtn.addEventListener('click', async () => {
     cachedAccessToken = data.tokens ? data.tokens.accessToken : '';
     cachedTenantId = data.user ? data.user.tenantId : cachedTenantId;
     
-    // Save to localStorage
-    localStorage.setItem('accessToken', cachedAccessToken);
+    // Tokens remain tab-scoped and are cleared when the browser session ends.
+    sessionStorage.setItem('accessToken', cachedAccessToken);
     if (data.tokens && data.tokens.refreshToken) {
-      localStorage.setItem('refreshToken', data.tokens.refreshToken);
+      sessionStorage.setItem('refreshToken', data.tokens.refreshToken);
     }
-    localStorage.setItem('tenantId', cachedTenantId);
+    sessionStorage.setItem('tenantId', cachedTenantId);
     
     setStatusInputs();
 
@@ -440,8 +464,7 @@ loginBtn.addEventListener('click', async () => {
       tenantIdInput.value = cachedTenantId;
     }
 
-    loginResult.textContent =
-      `Login successful.\nAccess Token:\n${data.tokens.accessToken}\n\nRefresh Token:\n${data.tokens.refreshToken}`;
+    loginResult.textContent = 'Login successful. The short-lived access token is available in the protected field. The refresh token stays in this tab session.';
     
     showToast('Login successful!', 'success');
   } catch (err) {
@@ -521,7 +544,7 @@ const loadKeys = async () => {
     const data = await response.json();
 
     if (!response.ok) {
-      keysList.innerHTML = `<p class="muted-note">${getErrorMessage(data)}</p>`;
+      keysList.innerHTML = `<p class="muted-note">${escapeHtml(getErrorMessage(data))}</p>`;
       return;
     }
 
@@ -576,7 +599,7 @@ validateKeyBtn.addEventListener('click', async () => {
           <h4 style="margin:0 0 6px; color:var(--danger); display:flex; align-items:center; gap:8px;">
             ❌ Invalid API Key
           </h4>
-          <p style="margin:0; font-size:0.9rem; color:var(--muted);">${errMsg}</p>
+          <p style="margin:0; font-size:0.9rem; color:var(--muted);">${escapeHtml(errMsg)}</p>
         </div>
       `;
       showToast('API key is invalid!', 'error');
@@ -591,14 +614,14 @@ validateKeyBtn.addEventListener('click', async () => {
           ✅ Valid API Key
         </h4>
         <div style="font-size:0.85rem; color:var(--text); line-height:1.6;">
-          <strong>Tenant ID:</strong> ${data.tenantId || '-'}<br>
-          <strong>Key ID:</strong> ${data.keyId || '-'}<br>
-          <strong>Environment:</strong> <span class="env-badge ${data.environment === 'PRODUCTION' ? 'env-badge-prod' : 'env-badge-dev'}">${data.environment || 'UNKNOWN'}</span><br>
-          <strong>Authorized Services:</strong> ${data.services ? data.services.join(', ') : 'None'}<br>
+          <strong>Tenant ID:</strong> ${escapeHtml(data.tenantId || '-')}<br>
+          <strong>Key ID:</strong> ${escapeHtml(data.keyId || '-')}<br>
+          <strong>Environment:</strong> <span class="env-badge ${data.environment === 'PRODUCTION' ? 'env-badge-prod' : 'env-badge-dev'}">${escapeHtml(data.environment || 'UNKNOWN')}</span><br>
+          <strong>Authorized Services:</strong> ${escapeHtml(data.services ? data.services.join(', ') : 'None')}<br>
         </div>
         <details style="margin-top:12px; font-family:'JetBrains Mono',monospace; font-size:0.75rem;">
           <summary style="cursor:pointer; color:var(--muted);">View Raw JSON Response</summary>
-          <pre style="background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; margin-top:8px; overflow-x:auto; white-space:pre-wrap;">${formattedJson}</pre>
+          <pre style="background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; margin-top:8px; overflow-x:auto; white-space:pre-wrap;">${escapeHtml(formattedJson)}</pre>
         </details>
       </div>
     `;
@@ -657,10 +680,14 @@ forgotPasswordBtn.addEventListener('click', async () => {
 // Reset Password Completion Flow
 resetPasswordBtn.addEventListener('click', async () => {
   const token = resetToken.value.trim();
-  const pass = newPassword.value.trim();
+  const pass = newPassword.value;
 
   if (!token || !pass) {
     showToast('Reset token and new password are required.', 'error');
+    return;
+  }
+  if (pass.length < 12) {
+    showToast('New password must be at least 12 characters long.', 'error');
     return;
   }
 
@@ -717,6 +744,16 @@ copyApiKeyBtn.addEventListener('click', () => {
 // Initialize state
 setStatusInputs();
 updateEnvUI();
+
+const invitationParams = new URLSearchParams(window.location.hash.slice(1));
+const invitationToken = invitationParams.get('invite');
+if (invitationToken && regInviteToken) {
+  regInviteToken.value = invitationToken;
+  regEmail.value = invitationParams.get('email') || '';
+  window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+  registerResult.style.display = 'block';
+  registerResult.textContent = 'Invitation loaded. Create your password to join the workspace.';
+}
 
 // Auto-fill login email if we registered
 if (localStorage.getItem('registeredEmail')) {
