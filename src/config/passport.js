@@ -1,66 +1,39 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const prisma = require('./prisma');
+const GitHubStrategy = require('passport-github2').Strategy;
+const FacebookStrategy = require('passport-facebook').Strategy;
+const { providerConfig } = require('./providers');
 const env = require('./env');
-const { decodeOAuthState } = require('../utils/oauth');
-const { ApiError } = require('../utils/errors');
+const { resolveSocialAccount } = require('../services/socialAccountService');
 
 const configurePassport = () => {
-  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
-    return;
-  }
-
-  passport.use(
-    new GoogleStrategy(
+  for (const [provider, Strategy] of Object.entries({
+    google: GoogleStrategy, github: GitHubStrategy, facebook: FacebookStrategy
+  })) {
+    const config = providerConfig(provider);
+    if (!config.clientID || !config.clientSecret || !config.callbackURL) continue;
+    const strategy = new Strategy(
       {
-        clientID: env.GOOGLE_CLIENT_ID,
-        clientSecret: env.GOOGLE_CLIENT_SECRET,
-        callbackURL: env.GOOGLE_CALLBACK_URL,
-        passReqToCallback: true
+        clientID: config.clientID,
+        clientSecret: config.clientSecret,
+        callbackURL: config.callbackURL,
+        passReqToCallback: true,
+        ...(provider === 'facebook' ? {
+          graphAPIVersion: env.FACEBOOK_GRAPH_API_VERSION,
+          profileFields: ['id', 'displayName'],
+          enableProof: true
+        } : {})
       },
-      async (req, accessToken, refreshToken, profile, done) => {
+      async (req, _accessToken, _refreshToken, profile, done) => {
         try {
-          const state = decodeOAuthState(req.query.state);
-          const email = profile.emails && profile.emails[0] ? profile.emails[0].value.toLowerCase() : null;
-
-          if (!email) {
-            return done(new ApiError(400, 'Google account email not available'));
-          }
-
-          let user = await prisma.user.findUnique({ where: { email } });
-
-          if (!user) {
-            if (!state.tenantId) {
-              return done(new ApiError(400, 'Tenant ID is required for first-time OAuth login'));
-            }
-
-            const tenant = await prisma.tenant.findUnique({ where: { id: state.tenantId } });
-            if (!tenant) {
-              return done(new ApiError(404, 'Tenant not found'));
-            }
-
-            user = await prisma.user.create({
-              data: {
-                email,
-                password: null,
-                role: 'USER',
-                tenantId: tenant.id,
-                isVerified: true
-              }
-            });
-          }
-
-          if (state.tenantId && user.tenantId !== state.tenantId) {
-            return done(new ApiError(403, 'User belongs to a different tenant'));
-          }
-
-          return done(null, user);
+          return done(null, await resolveSocialAccount(provider, profile.id, req.oauthState));
         } catch (err) {
           return done(err);
         }
       }
-    )
-  );
+    );
+    passport.use(strategy);
+  }
 };
 
 module.exports = {

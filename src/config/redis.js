@@ -19,10 +19,10 @@ redis.on('end', () => {
   redisReady = false;
 });
 
-redis.on('error', (err) => {
+redis.on('error', (_err) => {
   redisReady = false;
   if (env.REDIS_REQUIRED) {
-    console.error('Redis error', err);
+    console.error('Redis is unavailable; dependent auth features will fail closed.');
     return;
   }
 
@@ -35,18 +35,34 @@ redis.on('error', (err) => {
 
 const isRedisReady = () => redisReady;
 
+const unavailableResult = () => {
+  if (env.REDIS_REQUIRED) {
+    throw new Error('Redis is unavailable');
+  }
+  return null;
+};
+
 const safeGet = async (key) => {
-  if (!redisReady) return null;
+  if (!redisReady) return unavailableResult();
   return redis.get(key);
 };
 
+const safeGetDel = async (key) => {
+  if (!redisReady) return unavailableResult();
+  return redis.eval(
+    "local value = redis.call('GET', KEYS[1]); if value then redis.call('DEL', KEYS[1]); end; return value",
+    1,
+    key
+  );
+};
+
 const safeSet = async (key, value, mode, ttlSeconds) => {
-  if (!redisReady) return null;
+  if (!redisReady) return unavailableResult();
   return redis.set(key, value, mode, ttlSeconds);
 };
 
 const safeDel = async (key) => {
-  if (!redisReady) return null;
+  if (!redisReady) return unavailableResult();
   return redis.del(key);
 };
 
@@ -54,6 +70,7 @@ module.exports = {
   redis,
   isRedisReady,
   safeGet,
+  safeGetDel,
   safeSet,
   safeDel
 };
