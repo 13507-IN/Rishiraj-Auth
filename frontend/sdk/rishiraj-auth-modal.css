@@ -55,6 +55,8 @@
     0 24px 80px -12px rgba(0, 0, 0, 0.75),
     0 0 50px -10px rgba(99, 102, 241, 0.2);
   overflow: hidden;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
   transform: translateY(24px) scale(0.96);
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
               opacity 0.3s ease;
@@ -259,7 +261,8 @@
   background: var(--ra-card-border);
 }
 
-/* ── Google Button ─────────────────────────────────────────────── */
+/* ── Social sign-in buttons ────────────────────────────────────── */
+.ra-btn-social,
 .ra-btn-google {
   width: 100%;
   display: flex;
@@ -278,15 +281,29 @@
   transition: all 0.2s ease;
 }
 
+.ra-btn-social:hover,
 .ra-btn-google:hover {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.2);
 }
 
+.ra-btn-social svg,
 .ra-btn-google svg {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
+}
+
+.ra-social-glyph {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  color: var(--ra-text);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 /* ── Link Button ───────────────────────────────────────────────── */

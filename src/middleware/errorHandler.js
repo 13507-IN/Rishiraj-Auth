@@ -1,5 +1,6 @@
 const { ZodError } = require('zod');
 const { ApiError } = require('../utils/errors');
+const env = require('../config/env');
 
 const errorHandler = (err, req, res, next) => {
   const requestId = req.requestId || null;
@@ -20,8 +21,9 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  if (process.env.NODE_ENV === 'production') {
-    console.error(`[${requestId}] Unhandled error:`, err.message);
+  if (env.IS_PRODUCTION) {
+    const errorCode = typeof err.code === 'string' ? ` code=${err.code}` : '';
+    console.error(`[${requestId}] Unhandled ${err.name || 'Error'}${errorCode}`);
     return res.status(500).json({ message: 'Internal server error', requestId });
   }
 

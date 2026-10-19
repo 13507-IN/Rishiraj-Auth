@@ -36,7 +36,13 @@ const changePassword = async (userId, oldPassword, newPassword) => {
     throw new ApiError(401, 'Current password is incorrect');
   }
   const hashed = await bcrypt.hash(newPassword, 12);
-  await prisma.user.update({ where: { id: userId }, data: { password: hashed } });
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      password: hashed,
+      tokenVersion: { increment: 1 }
+    }
+  });
 
   // Revoke all refresh tokens
   await prisma.refreshToken.updateMany({

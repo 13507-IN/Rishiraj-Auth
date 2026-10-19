@@ -1,5 +1,6 @@
 const { asyncHandler } = require('../utils/errors');
 const adminService = require('../services/adminService');
+const env = require('../config/env');
 
 const getDashboard = asyncHandler(async (req, res) => {
   return res.status(200).json({
@@ -39,11 +40,26 @@ const updateUserTenant = asyncHandler(async (req, res) => {
   return res.status(200).json({ user });
 });
 
+const createInvitation = asyncHandler(async (req, res) => {
+  const { tenantId } = req.params;
+  const { email } = req.body;
+  const result = await adminService.createInvitation({ tenantId, email });
+  const response = {
+    invitation: result.invitation,
+    message: 'An email invitation has been sent. It expires in 7 days and can be accepted once.'
+  };
+  if (result.previewUrl && env.DEV_AUTH_TOKENS) {
+    response.previewUrl = result.previewUrl;
+  }
+  return res.status(201).json(response);
+});
+
 module.exports = {
   getDashboard,
   listTenants,
   createTenant,
   listUsers,
   updateUserRole,
-  updateUserTenant
+  updateUserTenant,
+  createInvitation
 };

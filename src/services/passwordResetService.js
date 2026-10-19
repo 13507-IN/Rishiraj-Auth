@@ -6,33 +6,57 @@ const { ApiError } = require('../utils/errors');
 const { sendPasswordResetEmail } = require('./emailService');
 
 const createPasswordReset = async (email) => {
-  const user = await prisma.user.findUnique({ where: { email } });
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await prisma.user.findFirst({
+    where: { email: { equals: normalizedEmail, mode: 'insensitive' } },
+    select: { id: true, email: true }
+  });
   if (!user) {
     return null;
   }
 
   const rawToken = generateRandomKey(32);
   const tokenHash = hashToken(rawToken);
-  const expiresAt = new Date(Date.now() + env.PASSWORD_RESET_TTL_MINUTES * 60 * 1000);
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + env.PASSWORD_RESET_TTL_MINUTES * 60 * 1000);
 
-  await prisma.passwordResetToken.create({
-    data: {
-      token: tokenHash,
-      userId: user.id,
-      expiresAt
-    }
+  await prisma.$transaction(async (transaction) => {
+    await transaction.passwordResetToken.updateMany({
+      where: { userId: user.id, consumedAt: null },
+      data: { consumedAt: now }
+    });
+    await transaction.passwordResetToken.create({
+      data: {
+        token: tokenHash,
+        userId: user.id,
+        expiresAt
+      }
+    });
   });
 
-  const mailRes = await sendPasswordResetEmail(user.email, rawToken);
+  let mailRes = null;
+  try {
+    mailRes = await sendPasswordResetEmail(user.email, rawToken);
+  } catch (_error) {
+    console.error('Password recovery email delivery failed.');
+  }
 
-  return { token: rawToken, previewUrl: mailRes?.previewUrl || null };
+  return mailRes
+    ? { token: rawToken, previewUrl: mailRes.previewUrl || null }
+    : null;
 };
 
 const resetPassword = async ({ token, newPasswordHash }) => {
   const tokenHash = hashToken(token);
 
   const record = await prisma.passwordResetToken.findUnique({
-    where: { token: tokenHash }
+    where: { token: tokenHash },
+    select: {
+      id: true,
+      userId: true,
+      expiresAt: true,
+      consumedAt: true
+    }
   });
 
   if (!record) {
@@ -43,31 +67,53 @@ const resetPassword = async ({ token, newPasswordHash }) => {
     throw new ApiError(400, 'Reset token already used');
   }
 
-  if (record.expiresAt.getTime() < Date.now()) {
+  if (record.expiresAt.getTime() <= Date.now()) {
     throw new ApiError(400, 'Reset token expired');
   }
 
-  await prisma.passwordResetToken.update({
-    where: { id: record.id },
-    data: { consumedAt: new Date() }
-  });
-
-  await prisma.user.update({
-    where: { id: record.userId },
-    data: {
-      password: newPasswordHash,
-      isVerified: true
+  const now = new Date();
+  const refreshTokens = await prisma.$transaction(async (transaction) => {
+    const consumed = await transaction.passwordResetToken.updateMany({
+      where: {
+        id: record.id,
+        consumedAt: null,
+        expiresAt: { gt: now }
+      },
+      data: { consumedAt: now }
+    });
+    if (consumed.count !== 1) {
+      throw new ApiError(400, 'Invalid or expired reset token');
     }
-  });
 
-  const refreshTokens = await prisma.refreshToken.findMany({
-    where: { userId: record.userId, revokedAt: null },
-    select: { token: true }
-  });
+    await transaction.passwordResetToken.updateMany({
+      where: {
+        userId: record.userId,
+        id: { not: record.id },
+        consumedAt: null
+      },
+      data: { consumedAt: now }
+    });
 
-  await prisma.refreshToken.updateMany({
-    where: { userId: record.userId, revokedAt: null },
-    data: { revokedAt: new Date() }
+    await transaction.user.update({
+      where: { id: record.userId },
+      data: {
+        password: newPasswordHash,
+        isVerified: true,
+        tokenVersion: { increment: 1 }
+      }
+    });
+
+    const activeRefreshTokens = await transaction.refreshToken.findMany({
+      where: { userId: record.userId, revokedAt: null },
+      select: { token: true }
+    });
+
+    await transaction.refreshToken.updateMany({
+      where: { userId: record.userId, revokedAt: null },
+      data: { revokedAt: now }
+    });
+
+    return activeRefreshTokens;
   });
 
   for (const rt of refreshTokens) {

@@ -7,7 +7,11 @@
 
   class RishirajAuth {
     constructor(options = {}) {
-      this.serverUrl = (options.serverUrl || window.location.origin).replace(/\/$/, '');
+      const serverUrl = new URL(options.serverUrl || window.location.origin, window.location.href);
+      if (!['http:', 'https:'].includes(serverUrl.protocol) || serverUrl.username || serverUrl.password) {
+        throw new Error('serverUrl must be an HTTP(S) URL without embedded credentials.');
+      }
+      this.serverUrl = serverUrl.href.replace(/\/$/, '');
       this.tenantId = options.tenantId || '';
       this.environment = options.environment || 'PRODUCTION';
       this.onLogin = options.onLogin || null;
@@ -15,37 +19,29 @@
       this.onTokenRefresh = options.onTokenRefresh || null;
       this.onError = options.onError || null;
 
-      // Storage Keys
+      // Migrate away from the previous persistent token storage.
       this._storageAccessKey = `ra_${this.tenantId}_access`;
       this._storageRefreshKey = `ra_${this.tenantId}_refresh`;
       this._storageUserKey = `ra_${this.tenantId}_user`;
+      [this._storageAccessKey, this._storageRefreshKey, this._storageUserKey].forEach((key) => {
+        try { localStorage.removeItem(key); } catch (_error) {}
+      });
 
-      this._tokens = {
-        accessToken: localStorage.getItem(this._storageAccessKey) || null,
-        refreshToken: localStorage.getItem(this._storageRefreshKey) || null
-      };
-
-      try {
-        const storedUser = localStorage.getItem(this._storageUserKey);
-        this._user = storedUser ? JSON.parse(storedUser) : null;
-      } catch(e) {
-        this._user = null;
-      }
+      // Tokens are memory-only in SDK integrations; applications should not
+      // persist bearer or refresh tokens in web storage.
+      this._tokens = { accessToken: null, refreshToken: null };
+      this._user = null;
 
       this._refreshTimer = null;
       this._modalElement = null;
 
-      // Auto start token validation or refresh if tokens exist
-      if (this._tokens.accessToken) {
-        this._startAutoRefresh();
-      }
     }
 
     // --- Core Auth Methods ---
 
-    async register(email, password) {
+    async register(email, password, inviteToken) {
       try {
-        const payload = { email, password, tenantId: this.tenantId };
+        const payload = { email, password, inviteToken };
         const data = await this._request('POST', '/auth/register', payload, false);
         return data;
       } catch (err) {
@@ -56,15 +52,11 @@
 
     async login(email, password) {
       try {
-        const payload = { email, password };
+        const payload = { email, password, ...(this.tenantId ? { tenantId: this.tenantId } : {}) };
         const data = await this._request('POST', '/auth/login', payload, false);
         
         this._tokens = data.tokens || {};
         this._user = data.user || null;
-
-        localStorage.setItem(this._storageAccessKey, this._tokens.accessToken || '');
-        localStorage.setItem(this._storageRefreshKey, this._tokens.refreshToken || '');
-        localStorage.setItem(this._storageUserKey, JSON.stringify(this._user));
 
         if (this.onLogin) {
           this.onLogin(this._user, this._tokens);
@@ -102,9 +94,7 @@
         const payload = { refreshToken: this._tokens.refreshToken };
         const data = await this._request('POST', '/auth/refresh-token', payload, false);
 
-        this._tokens = data || {};
-        localStorage.setItem(this._storageAccessKey, this._tokens.accessToken || '');
-        localStorage.setItem(this._storageRefreshKey, this._tokens.refreshToken || '');
+        this._tokens = data.tokens || data || {};
 
         if (this.onTokenRefresh) {
           this.onTokenRefresh(this._tokens);
@@ -123,7 +113,6 @@
       try {
         const data = await this._request('GET', '/user/profile', null, true);
         this._user = data.profile || null;
-        localStorage.setItem(this._storageUserKey, JSON.stringify(this._user));
         return this._user;
       } catch (err) {
         this._handleError(err);
@@ -172,53 +161,131 @@
     }
 
     googleLogin() {
-      const url = `${this.serverUrl}/auth/google?tenantId=${encodeURIComponent(this.tenantId)}&redirect=true`;
+      return this.providerLogin('google');
+    }
+
+    githubLogin() { return this.providerLogin('github'); }
+    facebookLogin() { return this.providerLogin('facebook'); }
+
+    providerLogin(provider, options = {}) {
+      if (!['google', 'github', 'facebook'].includes(provider)) return Promise.reject(new Error('Unsupported sign-in provider.'));
+      const query = new URLSearchParams({ clientOrigin: window.location.origin });
+      if (this.tenantId) query.set('tenantId', this.tenantId);
+      const url = `${this.serverUrl}/auth/${provider}?${query.toString()}`;
+      const serverOrigin = new URL(this.serverUrl).origin;
       const width = 500;
       const height = 600;
       const left = window.screen.width / 2 - width / 2;
       const top = window.screen.height / 2 - height / 2;
 
       const popup = window.open(
-        url,
-        'rishiraj_auth_google',
+        'about:blank',
+        'rishiraj_auth_social',
         `width=${width},height=${height},left=${left},top=${top},status=no,resizable=yes`
       );
 
+      if (!popup) return Promise.reject(new Error('Allow popups for this site, then try again.'));
+
       return new Promise((resolve, reject) => {
-        const handleMessage = (event) => {
-          if (event.origin !== this.serverUrl) return;
-          if (event.data && event.data.type === 'oauth-success') {
-            window.removeEventListener('message', handleMessage);
+        let processing = false;
+        const popupOpenedAt = Date.now();
+        const cleanup = () => {
+          window.removeEventListener('message', handleMessage);
+          clearInterval(checkClosed);
+        };
+        const handleMessage = async (event) => {
+          if (event.origin !== serverOrigin || event.source !== popup || processing) return;
+          if (event.data?.type === 'oauth-error') {
+            processing = true;
+            cleanup();
+            reject(new Error(event.data.error || 'Social sign-in failed.'));
+            return;
+          }
+          if (event.data?.type !== 'oauth-code' || typeof event.data.code !== 'string') return;
 
-            this._tokens = {
-              accessToken: event.data.accessToken,
-              refreshToken: event.data.refreshToken
-            };
-
-            localStorage.setItem(this._storageAccessKey, this._tokens.accessToken || '');
-            localStorage.setItem(this._storageRefreshKey, this._tokens.refreshToken || '');
-
-            this.getProfile()
-              .then(user => {
-                if (this.onLogin) this.onLogin(user, this._tokens);
-                this._startAutoRefresh();
-                resolve({ user, tokens: this._tokens });
-              })
-              .catch(err => {
-                reject(err);
-              });
+          processing = true;
+          cleanup();
+          try {
+            const result = await this._request(
+              'POST',
+              '/auth/oauth/exchange',
+              { code: event.data.code },
+              false
+            );
+            this._tokens = result.tokens || {};
+            this._user = result.user || null;
+            if (this.onLogin) this.onLogin(this._user, this._tokens);
+            this._startAutoRefresh();
+            resolve({ user: this._user, tokens: this._tokens });
+          } catch (error) {
+            reject(error);
           }
         };
 
-        window.addEventListener('message', handleMessage);
-
         const checkClosed = setInterval(() => {
-          if (!popup || popup.closed) {
-            clearInterval(checkClosed);
-            window.removeEventListener('message', handleMessage);
-            reject(new Error('Google login popup closed by user'));
+          if (popup.closed) {
+            cleanup();
+            reject(new Error('Sign-in window was closed. You can try again.'));
+            return;
           }
-        }, 1000);
+
+          // OAuth errors are redirected back to this server without a
+          // postMessage payload; recognize that same-origin terminal page so
+          // the SDK promise does not remain pending indefinitely.
+          try {
+            const popupUrl = new URL(popup.location.href);
+            if (
+              popupUrl.origin === serverOrigin &&
+              (
+                popupUrl.pathname === '/oauth-failed' ||
+                (popupUrl.pathname.startsWith('/auth/') && Date.now() - popupOpenedAt > 15000)
+              )
+            ) {
+              processing = true;
+              cleanup();
+              popup.close();
+              reject(new Error('Sign-in could not be completed. Check provider setup and try again.'));
+            }
+          } catch (_error) {
+            // The popup is on Google's cross-origin pages during sign-in.
+          }
+        }, 500);
+        window.addEventListener('message', handleMessage);
+        const beginProviderLogin = async () => {
+          const availability = await fetch(`${this.serverUrl}/auth/providers`, { mode: 'cors' });
+          const availabilityData = await availability.json().catch(() => ({}));
+          if (!availability.ok) throw new Error(availabilityData.message || 'Could not check sign-in setup.');
+          const selectedProvider = availabilityData.providers?.find((item) => item.id === provider);
+          if (!selectedProvider?.configured) {
+            throw new Error(`${provider[0].toUpperCase() + provider.slice(1)} sign-in has not been set up yet. Ask the workspace owner to finish the provider setup.`);
+          }
+          if (options.link) {
+            if (typeof options.accessToken !== 'string' || !options.accessToken) {
+              throw new Error('Sign in again before connecting a provider.');
+            }
+            const response = await fetch(`${this.serverUrl}/auth/providers/${provider}/link`, {
+              method: 'POST',
+              credentials: 'include',
+              headers: { Authorization: `Bearer ${options.accessToken}` }
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data.message || 'Could not connect this account.');
+            }
+            if (popup.closed) throw new Error('Connection window was closed.');
+            if (typeof data.url !== 'string') throw new Error('The server returned an invalid connection URL.');
+            popup.location.href = new URL(data.url, this.serverUrl).href;
+          } else {
+            if (popup.closed) throw new Error('Sign-in window was closed.');
+            popup.location.href = url;
+          }
+        };
+        beginProviderLogin().catch((error) => {
+          processing = true;
+          cleanup();
+          if (!popup.closed) popup.close();
+          reject(error);
+        });
       });
     }
 
@@ -243,9 +310,6 @@
       this._stopAutoRefresh();
       this._tokens = null;
       this._user = null;
-      localStorage.removeItem(this._storageAccessKey);
-      localStorage.removeItem(this._storageRefreshKey);
-      localStorage.removeItem(this._storageUserKey);
     }
 
     // --- Helpers ---
@@ -353,13 +417,27 @@
       msgDiv.className = 'ra-message';
       form.appendChild(msgDiv);
 
-      const showMessage = (msg, isError = true, isHtml = false) => {
+      const showMessage = (msg, isError = true) => {
         msgDiv.className = `ra-message ra-show ${isError ? 'error' : 'success'}`;
-        if (isHtml) {
-          msgDiv.innerHTML = msg;
-        } else {
-          msgDiv.textContent = msg;
+        msgDiv.textContent = msg;
+      };
+
+      const showMessageWithLink = (message, url, label) => {
+        showMessage(message, false);
+        let link;
+        try {
+          link = new URL(url);
+        } catch (_error) {
+          return;
         }
+        if (link.protocol !== 'https:') return;
+        msgDiv.appendChild(document.createElement('br'));
+        const anchor = document.createElement('a');
+        anchor.href = link.href;
+        anchor.target = '_blank';
+        anchor.rel = 'noopener noreferrer';
+        anchor.textContent = label;
+        msgDiv.appendChild(anchor);
       };
 
       const clearMessage = () => {
@@ -388,9 +466,17 @@
         </div>
         <button class="ra-btn-primary" id="ra-btn-login-submit" type="button">Sign In</button>
         <div class="ra-divider">or</div>
-        <button class="ra-btn-google" id="ra-btn-google-login" type="button">
+        <button class="ra-btn-social" data-ra-provider="google" type="button">
           ${GOOGLE_SVG}
           <span>Continue with Google</span>
+        </button>
+        <button class="ra-btn-social" data-ra-provider="github" type="button">
+          <span class="ra-social-glyph" aria-hidden="true">⌘</span>
+          <span>Continue with GitHub</span>
+        </button>
+        <button class="ra-btn-social" data-ra-provider="facebook" type="button">
+          <span class="ra-social-glyph" aria-hidden="true">f</span>
+          <span>Continue with Facebook</span>
         </button>
       `;
       form.appendChild(loginPanel);
@@ -407,9 +493,13 @@
         <div class="ra-field">
           <label class="ra-label">Password</label>
           <div class="ra-input-wrap">
-            <input class="ra-input" id="ra-register-password" type="password" placeholder="Minimum 8 characters" required />
+            <input class="ra-input" id="ra-register-password" type="password" placeholder="At least 12 characters" required />
             <button class="ra-toggle-pw" type="button">${EYE_CLOSED_SVG}</button>
           </div>
+        </div>
+        <div class="ra-field">
+          <label class="ra-label">Workspace invitation</label>
+          <input class="ra-input" id="ra-register-invite-token" type="password" placeholder="One-time invitation token" required />
         </div>
         <button class="ra-btn-primary" id="ra-btn-register-submit" type="button">Sign Up</button>
       `;
@@ -432,7 +522,7 @@
         <div class="ra-field">
           <label class="ra-label">New Password</label>
           <div class="ra-input-wrap">
-            <input class="ra-input" id="ra-reset-password" type="password" placeholder="Minimum 8 characters" />
+            <input class="ra-input" id="ra-reset-password" type="password" placeholder="At least 12 characters" />
             <button class="ra-toggle-pw" type="button">${EYE_CLOSED_SVG}</button>
           </div>
         </div>
@@ -446,10 +536,16 @@
       // Footer branding
       const footer = document.createElement('div');
       footer.className = 'ra-footer';
-      footer.innerHTML = `
-        <span class="ra-footer-text">Secured by</span>
-        <a class="ra-footer-brand" href="${this.serverUrl}" target="_blank">Rishiraj Auth</a>
-      `;
+      const footerText = document.createElement('span');
+      footerText.className = 'ra-footer-text';
+      footerText.textContent = 'Secured by';
+      const footerLink = document.createElement('a');
+      footerLink.className = 'ra-footer-brand';
+      footerLink.href = this.serverUrl;
+      footerLink.target = '_blank';
+      footerLink.rel = 'noopener noreferrer';
+      footerLink.textContent = 'Rishiraj Auth';
+      footer.append(footerText, footerLink);
       modal.appendChild(footer);
 
       // Append overlay to body
@@ -528,7 +624,7 @@
       loginBtn.addEventListener('click', async () => {
         clearMessage();
         const email = loginPanel.querySelector('#ra-login-email').value.trim();
-        const password = loginPanel.querySelector('#ra-login-password').value.trim();
+        const password = loginPanel.querySelector('#ra-login-password').value;
 
         if (!email || !password) {
           showMessage('Email and password are required.');
@@ -552,24 +648,25 @@
       registerBtn.addEventListener('click', async () => {
         clearMessage();
         const email = registerPanel.querySelector('#ra-register-email').value.trim();
-        const password = registerPanel.querySelector('#ra-register-password').value.trim();
+        const password = registerPanel.querySelector('#ra-register-password').value;
+        const inviteToken = registerPanel.querySelector('#ra-register-invite-token').value.trim();
 
-        if (!email || !password) {
-          showMessage('Email and password are required.');
+        if (!email || !password || !inviteToken) {
+          showMessage('Email, password, and workspace invitation are required.');
           return;
         }
-        if (password.length < 8) {
-          showMessage('Password must be at least 8 characters.');
+        if (password.length < 12) {
+          showMessage('Password must be at least 12 characters.');
           return;
         }
 
         setBtnLoading(registerBtn, true, 'Sign Up');
         try {
-          const res = await this.register(email, password);
-          let successText = 'Registration successful! Please verify your email.';
+          const res = await this.register(email, password, inviteToken);
+          registerPanel.querySelector('#ra-register-invite-token').value = '';
+          const successText = 'Registration successful! Please verify your email.';
           if (res.previewUrl) {
-            successText += `<br><a href="${res.previewUrl}" target="_blank" style="color:#ffb86b; text-decoration:underline; font-weight:600; display:inline-block; margin-top:4px;">📬 Click here to Open Test Email (Ethereal)</a>`;
-            showMessage(successText, false, true);
+            showMessageWithLink(successText, res.previewUrl, '📬 Open test email');
           } else {
             showMessage(successText, false);
           }
@@ -578,7 +675,7 @@
             tabs.querySelector('[data-panel="login"]').click();
             modal.querySelector('#ra-login-email').value = email;
             if (res.previewUrl) {
-              showMessage(`Verification email sent.<br><a href="${res.previewUrl}" target="_blank" style="color:#ffb86b; text-decoration:underline; font-weight:600; display:inline-block; margin-top:4px;">📬 Click here to Open Test Email (Ethereal)</a>`, false, true);
+              showMessageWithLink('Verification email sent.', res.previewUrl, '📬 Open test email');
             } else {
               showMessage('Verification link sent. Please verify and sign in.', false);
             }
@@ -590,17 +687,23 @@
         }
       });
 
-      // 3. Google OAuth Submit
-      const googleBtn = loginPanel.querySelector('#ra-btn-google-login');
-      googleBtn.addEventListener('click', async () => {
-        clearMessage();
-        try {
-          await this.googleLogin();
-          showMessage('Login successful!', false);
-          setTimeout(() => closeHandler(), 800);
-        } catch (err) {
-          showMessage(err.message || 'Google OAuth failed.');
-        }
+      // 3. Social sign-in options
+      loginPanel.querySelectorAll('[data-ra-provider]').forEach((providerBtn) => {
+        providerBtn.addEventListener('click', async () => {
+          clearMessage();
+          const provider = providerBtn.dataset.raProvider;
+          const providerName = provider[0].toUpperCase() + provider.slice(1);
+          setBtnLoading(providerBtn, true, `Continue with ${providerName}`);
+          try {
+            await this.providerLogin(provider);
+            showMessage('Sign-in successful!', false);
+            setTimeout(() => closeHandler(), 800);
+          } catch (err) {
+            showMessage(err.message || `${providerName} sign-in failed.`);
+          } finally {
+            setBtnLoading(providerBtn, false, `Continue with ${providerName}`);
+          }
+        });
       });
 
       // 4. Send Forgot Token Submit
@@ -617,10 +720,9 @@
         setBtnLoading(forgotBtn, true, 'Send Reset Token');
         try {
           const res = await this.forgotPassword(email);
-          let msgText = 'Reset token has been sent!';
+          const msgText = 'If the account exists, a reset email has been sent.';
           if (res.previewUrl) {
-            msgText += `<br><a href="${res.previewUrl}" target="_blank" style="color:#ffb86b; text-decoration:underline; font-weight:600; display:inline-block; margin-top:4px;">📬 Click here to Open Reset Email (Ethereal)</a>`;
-            showMessage(msgText, false, true);
+            showMessageWithLink(msgText, res.previewUrl, '📬 Open test email');
           } else {
             showMessage(msgText, false);
           }
@@ -639,14 +741,14 @@
       resetBtn.addEventListener('click', async () => {
         clearMessage();
         const token = forgotPanel.querySelector('#ra-reset-token').value.trim();
-        const newPassword = forgotPanel.querySelector('#ra-reset-password').value.trim();
+        const newPassword = forgotPanel.querySelector('#ra-reset-password').value;
 
         if (!token || !newPassword) {
           showMessage('Token and new password are required.');
           return;
         }
-        if (newPassword.length < 8) {
-          showMessage('Password must be at least 8 characters.');
+        if (newPassword.length < 12) {
+          showMessage('Password must be at least 12 characters.');
           return;
         }
 

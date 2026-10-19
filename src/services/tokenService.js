@@ -4,8 +4,13 @@ const { safeGet, safeSet, safeDel, isRedisReady } = require('../config/redis');
 const { signAccessToken, signRefreshToken, verifyRefreshToken, decodeToken } = require('../utils/tokens');
 const { hashToken, getTimeToLiveSeconds } = require('../utils/crypto');
 const { ApiError } = require('../utils/errors');
+const env = require('../config/env');
 
 const issueTokens = async ({ user, deviceId }) => {
+  if (env.REDIS_REQUIRED && !isRedisReady()) {
+    throw new ApiError(503, 'Session service is temporarily unavailable');
+  }
+
   const accessJti = crypto.randomUUID();
   const refreshJti = crypto.randomUUID();
 
@@ -13,6 +18,7 @@ const issueTokens = async ({ user, deviceId }) => {
     sub: user.id,
     role: user.role,
     tenantId: user.tenantId,
+    ver: user.tokenVersion || 0,
     jti: accessJti,
     type: 'access'
   });
@@ -21,6 +27,7 @@ const issueTokens = async ({ user, deviceId }) => {
     sub: user.id,
     role: user.role,
     tenantId: user.tenantId,
+    ver: user.tokenVersion || 0,
     jti: refreshJti,
     type: 'refresh'
   });
@@ -40,7 +47,15 @@ const issueTokens = async ({ user, deviceId }) => {
   });
 
   const ttl = getTimeToLiveSeconds(expiresAt);
-  await safeSet(`rt:${tokenHash}`, user.id, 'EX', ttl);
+  try {
+    await safeSet(`rt:${tokenHash}`, user.id, 'EX', ttl);
+  } catch (error) {
+    await prisma.refreshToken.update({
+      where: { id: refreshRecord.id },
+      data: { revokedAt: new Date() }
+    });
+    throw error;
+  }
 
   return {
     accessToken,
@@ -51,6 +66,10 @@ const issueTokens = async ({ user, deviceId }) => {
 };
 
 const validateRefreshToken = async (token) => {
+  if (env.REDIS_REQUIRED && !isRedisReady()) {
+    throw new ApiError(503, 'Session service is temporarily unavailable');
+  }
+
   let payload;
   try {
     payload = verifyRefreshToken(token);
@@ -72,7 +91,7 @@ const validateRefreshToken = async (token) => {
     throw new ApiError(401, 'Refresh token has been revoked');
   }
 
-  if (record.expiresAt.getTime() < Date.now()) {
+  if (record.expiresAt.getTime() <= Date.now()) {
     throw new ApiError(401, 'Refresh token has expired');
   }
 
@@ -90,14 +109,39 @@ const validateRefreshToken = async (token) => {
 const rotateRefreshToken = async ({ token, deviceId }) => {
   const { payload, record, tokenHash } = await validateRefreshToken(token);
 
-  const user = await prisma.user.findUnique({ where: { id: payload.sub } });
+  const now = new Date();
+  const claimed = await prisma.refreshToken.updateMany({
+    where: {
+      id: record.id,
+      revokedAt: null,
+      expiresAt: { gt: now }
+    },
+    data: { revokedAt: now }
+  });
+  if (claimed.count !== 1) {
+    await safeDel(`rt:${tokenHash}`);
+    throw new ApiError(401, 'Refresh token has already been used');
+  }
+  await safeDel(`rt:${tokenHash}`);
+
+  const user = await prisma.user.findUnique({
+    where: { id: payload.sub },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      tenantId: true,
+      isVerified: true,
+      tokenVersion: true
+    }
+  });
   if (!user) {
     throw new ApiError(404, 'User not found');
   }
 
   const nextTokens = await issueTokens({ user, deviceId: deviceId || record.deviceId });
 
-  // Rotation: revoke the old token and link it to the new one.
+  // Record the rotation only after the replacement token is safely persisted.
   await prisma.refreshToken.update({
     where: { id: record.id },
     data: {
@@ -112,17 +156,23 @@ const rotateRefreshToken = async ({ token, deviceId }) => {
 };
 
 const revokeRefreshToken = async (token) => {
-  if (!token) return;
-  try {
-    const tokenHash = hashToken(token);
-    await prisma.refreshToken.updateMany({
-      where: { token: tokenHash, revokedAt: null },
-      data: { revokedAt: new Date() }
-    });
-    await safeDel(`rt:${tokenHash}`);
-  } catch (err) {
-    return;
-  }
+  if (!token) return null;
+  const tokenHash = hashToken(token);
+  const record = await prisma.refreshToken.findUnique({
+    where: { token: tokenHash },
+    select: {
+      userId: true,
+      user: { select: { tenantId: true } }
+    }
+  });
+  await prisma.refreshToken.updateMany({
+    where: { token: tokenHash, revokedAt: null },
+    data: { revokedAt: new Date() }
+  });
+  await safeDel(`rt:${tokenHash}`);
+  return record
+    ? { userId: record.userId, tenantId: record.user.tenantId }
+    : null;
 };
 
 const blacklistAccessToken = async (token) => {

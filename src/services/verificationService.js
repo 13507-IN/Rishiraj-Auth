@@ -9,12 +9,19 @@ const createVerificationToken = async (user) => {
   const tokenHash = hashToken(rawToken);
   const expiresAt = new Date(Date.now() + env.EMAIL_VERIFY_TTL_HOURS * 60 * 60 * 1000);
 
-  await prisma.emailVerificationToken.create({
-    data: {
-      token: tokenHash,
-      userId: user.id,
-      expiresAt
-    }
+  const now = new Date();
+  await prisma.$transaction(async (transaction) => {
+    await transaction.emailVerificationToken.updateMany({
+      where: { userId: user.id, consumedAt: null },
+      data: { consumedAt: now }
+    });
+    await transaction.emailVerificationToken.create({
+      data: {
+        token: tokenHash,
+        userId: user.id,
+        expiresAt
+      }
+    });
   });
 
   const mailRes = await sendVerificationEmail(user.email, rawToken);
@@ -27,7 +34,12 @@ const verifyEmail = async (token) => {
 
   const record = await prisma.emailVerificationToken.findUnique({
     where: { token: tokenHash },
-    include: { user: true }
+    select: {
+      id: true,
+      userId: true,
+      expiresAt: true,
+      consumedAt: true
+    }
   });
 
   if (!record) {
@@ -42,30 +54,49 @@ const verifyEmail = async (token) => {
     throw new ApiError(400, 'Verification token expired');
   }
 
-  await prisma.emailVerificationToken.update({
-    where: { id: record.id },
-    data: { consumedAt: new Date() }
+  const now = new Date();
+  const user = await prisma.$transaction(async (transaction) => {
+    const consumed = await transaction.emailVerificationToken.updateMany({
+      where: {
+        id: record.id,
+        consumedAt: null,
+        expiresAt: { gt: now }
+      },
+      data: { consumedAt: now }
+    });
+    if (consumed.count !== 1) {
+      throw new ApiError(400, 'Invalid or expired verification token');
+    }
+    return transaction.user.update({
+      where: { id: record.userId },
+      data: { isVerified: true },
+      select: { id: true }
+    });
   });
 
-  await prisma.user.update({
-    where: { id: record.userId },
-    data: { isVerified: true }
-  });
-
-  return record.user;
+  return user;
 };
 
 const resendVerification = async (email) => {
-  const user = await prisma.user.findUnique({ where: { email } });
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await prisma.user.findFirst({
+    where: { email: { equals: normalizedEmail, mode: 'insensitive' } },
+    select: { id: true, email: true, isVerified: true }
+  });
   if (!user) {
     return null;
   }
 
   if (user.isVerified) {
-    throw new ApiError(400, 'Email already verified');
+    return null;
   }
 
-  return createVerificationToken(user);
+  try {
+    return await createVerificationToken(user);
+  } catch (_error) {
+    console.error('Verification email delivery failed.');
+    return null;
+  }
 };
 
 module.exports = {

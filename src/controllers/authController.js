@@ -1,15 +1,18 @@
 const authService = require('../services/authService');
-const { issueTokens } = require('../services/tokenService');
 const { logAudit } = require('../services/auditService');
 const { verifyEmail, resendVerification } = require('../services/verificationService');
 const { createPasswordReset, resetPassword } = require('../services/passwordResetService');
 const bcrypt = require('bcrypt');
-const { asyncHandler } = require('../utils/errors');
+const { asyncHandler, ApiError } = require('../utils/errors');
 const { decodeOAuthState } = require('../utils/oauth');
-const { ApiError } = require('../utils/errors');
+const { createOAuthExchangeCode, exchangeOAuthCode } = require('../services/oauthExchangeService');
+const env = require('../config/env');
+const { verifyAccessToken } = require('../utils/tokens');
+const prisma = require('../config/prisma');
+const { safeGet, isRedisReady } = require('../config/redis');
 
 const register = asyncHandler(async (req, res) => {
-  const { email, password, tenantId, tenantName } = req.body;
+  const { email, password, tenantId, tenantName, inviteToken } = req.body;
   const ip = req.ip;
 
   const { user, verificationToken, previewUrl } = await authService.register({
@@ -17,10 +20,11 @@ const register = asyncHandler(async (req, res) => {
     password,
     tenantId,
     tenantName,
+    inviteToken,
     ip
   });
 
-  return res.status(201).json({
+  const response = {
     user: {
       id: user.id,
       email: user.email,
@@ -28,20 +32,24 @@ const register = asyncHandler(async (req, res) => {
       tenantId: user.tenantId,
       isVerified: user.isVerified
     },
-    message: 'Registration successful. Please verify your email to continue.',
-    verificationToken,
-    previewUrl: previewUrl || null
-  });
+    message: 'Registration successful. Please verify your email to continue.'
+  };
+  if (env.DEV_AUTH_TOKENS) {
+    response.verificationToken = verificationToken;
+    response.previewUrl = previewUrl || null;
+  }
+  return res.status(201).json(response);
 });
 
 const login = asyncHandler(async (req, res) => {
-  const { email, password, deviceId } = req.body;
+  const { email, password, deviceId, tenantId } = req.body;
   const ip = req.ip;
 
   const { user, tokens } = await authService.login({
     email,
     password,
     deviceId,
+    tenantId,
     ip
   });
 
@@ -58,13 +66,27 @@ const login = asyncHandler(async (req, res) => {
 
 const logout = asyncHandler(async (req, res) => {
   const { refreshToken } = req.body;
-  const accessToken = req.headers.authorization ? req.headers.authorization.split(' ')[1] : null;
+  const authHeader = req.headers.authorization || '';
+  const candidateAccessToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  let accessToken = null;
+  let accessPayload = null;
+  if (candidateAccessToken) {
+    try {
+      accessPayload = verifyAccessToken(candidateAccessToken);
+      if (accessPayload.type === 'access') accessToken = candidateAccessToken;
+    } catch (_error) {
+      // A valid refresh token can still revoke an expired access-token session.
+    }
+  }
+  if (!refreshToken && !accessToken) {
+    throw new ApiError(400, 'A valid access token or refresh token is required');
+  }
 
   await authService.logout({
     refreshToken,
     accessToken,
-    userId: req.user?.id || null,
-    tenantId: req.user?.tenantId || null,
+    userId: accessPayload?.sub || null,
+    tenantId: accessPayload?.tenantId || null,
     ip: req.ip
   });
 
@@ -91,21 +113,27 @@ const verifyEmailHandler = asyncHandler(async (req, res) => {
 const resendVerificationHandler = asyncHandler(async (req, res) => {
   const { email } = req.body;
   const result = await resendVerification(email);
-  return res.status(200).json({
+  const response = {
     message: 'If the account exists, a verification email has been sent.',
-    verificationToken: result?.token || result || null,
-    previewUrl: result?.previewUrl || null
-  });
+  };
+  if (env.DEV_AUTH_TOKENS) {
+    response.verificationToken = result?.token || null;
+    response.previewUrl = result?.previewUrl || null;
+  }
+  return res.status(200).json(response);
 });
 
 const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
   const result = await createPasswordReset(email);
-  return res.status(200).json({
+  const response = {
     message: 'If the account exists, a reset email has been sent.',
-    resetToken: result?.token || result || null,
-    previewUrl: result?.previewUrl || null
-  });
+  };
+  if (env.DEV_AUTH_TOKENS) {
+    response.resetToken = result?.token || null;
+    response.previewUrl = result?.previewUrl || null;
+  }
+  return res.status(200).json(response);
 });
 
 const resetPasswordHandler = asyncHandler(async (req, res) => {
@@ -118,10 +146,14 @@ const resetPasswordHandler = asyncHandler(async (req, res) => {
 const googleCallback = asyncHandler(async (req, res) => {
   const user = req.user;
   if (!user) {
-    throw new ApiError(401, 'Google authentication failed');
+    throw new ApiError(401, 'Social sign-in failed');
   }
 
-  const tokens = await issueTokens({ user });
+  const state = decodeOAuthState(req.query.state);
+  if (!state || !state.clientOrigin) {
+    throw new ApiError(400, 'Invalid OAuth transaction');
+  }
+
   await logAudit({
     userId: user.id,
     tenantId: user.tenantId,
@@ -129,18 +161,35 @@ const googleCallback = asyncHandler(async (req, res) => {
     ip: req.ip
   });
 
-  const state = decodeOAuthState(req.query.state);
-  if (state.redirect) {
-    const redirectUrl = new URL('/oauth-success', process.env.FRONTEND_URL || 'http://localhost:4000');
-    redirectUrl.searchParams.set('accessToken', tokens.accessToken);
-    redirectUrl.searchParams.set('refreshToken', tokens.refreshToken);
-    return res.redirect(redirectUrl.toString());
+  const code = await createOAuthExchangeCode({
+    userId: user.id,
+    clientOrigin: state.clientOrigin
+  });
+  const serviceOrigin = new URL(require('../config/providers').providerConfig(state.provider).callbackURL).origin;
+  const redirectUrl = new URL('/oauth-success', serviceOrigin);
+  redirectUrl.searchParams.set('targetOrigin', state.clientOrigin);
+  redirectUrl.hash = `code=${encodeURIComponent(code)}`;
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  return res.redirect(303, redirectUrl.toString());
+});
+
+const exchangeOAuth = asyncHandler(async (req, res) => {
+  const clientOrigin = req.get('origin');
+  if (!clientOrigin) {
+    throw new ApiError(400, 'OAuth exchange requires a browser origin');
   }
+  const { user, tokens } = await exchangeOAuthCode({
+    code: req.body.code,
+    clientOrigin
+  });
 
   return res.status(200).json({
     user: {
       id: user.id,
       email: user.email,
+      name: user.name,
+      avatarUrl: user.avatarUrl,
       role: user.role,
       tenantId: user.tenantId
     },
@@ -161,60 +210,59 @@ const verifyToken = asyncHandler(async (req, res) => {
     });
   }
 
+  let payload;
   try {
-    // 1. Cryptographically verify the JWT signature + expiry
-    const { verifyAccessToken } = require('../utils/tokens');
-    const payload = verifyAccessToken(rawToken);
-
-    if (!payload?.sub || !payload?.jti) {
-      return res.status(200).json({ valid: false, error: 'Malformed token payload' });
-    }
-
-    // 2. Check blacklist (token may have been revoked via logout)
-    const { safeGet } = require('../config/redis');
-    const blacklisted = await safeGet(`bl:${payload.jti}`);
-    if (blacklisted) {
-      return res.status(200).json({ valid: false, error: 'Token has been revoked' });
-    }
-
-    // 3. Optionally enrich with DB profile if available
-    let email = null;
-    let name = null;
-    try {
-      const prisma = require('../config/prisma');
-      const user = await prisma.user.findUnique({
-        where: { id: payload.sub },
-        select: { email: true, name: true }
-      });
-      if (user) {
-        email = user.email;
-        name = user.name;
-      }
-    } catch (_dbErr) {
-      // DB lookup is best-effort; token is still valid without it
-    }
-
-    return res.status(200).json({
-      valid: true,
-      user: {
-        userId: payload.sub,
-        tenantId: payload.tenantId,
-        role: payload.role,
-        email,
-        name
-      },
-      expiresAt: payload.exp ? new Date(payload.exp * 1000).toISOString() : null
-    });
+    payload = verifyAccessToken(rawToken);
   } catch (err) {
-    // jwt.verify throws on expired/invalid tokens
     const message = err.name === 'TokenExpiredError'
       ? 'Token has expired'
       : err.name === 'JsonWebTokenError'
         ? 'Invalid token signature'
         : 'Token verification failed';
-
     return res.status(200).json({ valid: false, error: message });
   }
+
+  if (!payload?.sub || !payload?.jti || payload.type !== 'access') {
+    return res.status(200).json({ valid: false, error: 'Malformed access token' });
+  }
+  if (env.REDIS_REQUIRED && !isRedisReady()) {
+    return res.status(503).json({ valid: false, error: 'Token revocation service is unavailable' });
+  }
+  if (await safeGet(`bl:${payload.jti}`)) {
+    return res.status(200).json({ valid: false, error: 'Token has been revoked' });
+  }
+
+  // Treat this endpoint as an authorization check, not only a JWT decoder.
+  // If the database is unavailable, the request fails instead of trusting stale claims.
+  const user = await prisma.user.findUnique({
+    where: { id: payload.sub },
+    select: {
+      id: true,
+      role: true,
+      tenantId: true,
+      isVerified: true,
+      tokenVersion: true
+    }
+  });
+  if (
+    !user ||
+    !user.isVerified ||
+    payload.role !== user.role ||
+    payload.tenantId !== user.tenantId ||
+    payload.ver !== user.tokenVersion
+  ) {
+    return res.status(200).json({ valid: false, error: 'Account or permissions are no longer valid' });
+  }
+
+  return res.status(200).json({
+    valid: true,
+    user: {
+      userId: user.id,
+      tenantId: user.tenantId,
+      role: user.role
+    },
+    expiresAt: payload.exp ? new Date(payload.exp * 1000).toISOString() : null
+  });
 });
 
 module.exports = {
@@ -227,5 +275,6 @@ module.exports = {
   forgotPassword,
   resetPasswordHandler,
   googleCallback,
+  exchangeOAuth,
   verifyToken
 };

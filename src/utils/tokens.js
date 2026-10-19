@@ -3,6 +3,7 @@ const env = require('../config/env');
 
 const signAccessToken = (payload) => {
   return jwt.sign(payload, env.JWT_ACCESS_SECRET, {
+    algorithm: 'HS256',
     expiresIn: env.ACCESS_TOKEN_TTL,
     issuer: 'auth-system',
     audience: 'auth-system-users'
@@ -11,6 +12,7 @@ const signAccessToken = (payload) => {
 
 const signRefreshToken = (payload) => {
   return jwt.sign(payload, env.JWT_REFRESH_SECRET, {
+    algorithm: 'HS256',
     expiresIn: env.REFRESH_TOKEN_TTL,
     issuer: 'auth-system',
     audience: 'auth-system-users'
@@ -19,6 +21,7 @@ const signRefreshToken = (payload) => {
 
 const verifyAccessToken = (token) => {
   return jwt.verify(token, env.JWT_ACCESS_SECRET, {
+    algorithms: ['HS256'],
     issuer: 'auth-system',
     audience: 'auth-system-users'
   });
@@ -26,6 +29,7 @@ const verifyAccessToken = (token) => {
 
 const verifyRefreshToken = (token) => {
   return jwt.verify(token, env.JWT_REFRESH_SECRET, {
+    algorithms: ['HS256'],
     issuer: 'auth-system',
     audience: 'auth-system-users'
   });

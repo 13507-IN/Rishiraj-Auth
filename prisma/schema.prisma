@@ -24,44 +24,61 @@ enum Environment {
 }
 
 model Tenant {
-  id        String    @id @default(uuid())
-  name      String
-  createdAt DateTime  @default(now())
-  users     User[]
-  apiKeys   ApiKey[]
-  audits    AuditLog[]
-  projects  Project[]
+  id          String             @id @default(uuid())
+  name        String
+  ownerId     String?
+  loginPage   Json?
+  createdAt   DateTime           @default(now())
+  users       User[]
+  apiKeys     ApiKey[]
+  audits      AuditLog[]
+  projects    Project[]
+  invitations TenantInvitation[]
 
   @@unique([name])
 }
 
 model User {
-  id           String         @id @default(uuid())
-  email        String         @unique
-  name         String?
-  avatarUrl    String?
-  password     String?
-  role         Role           @default(USER)
-  tenantId     String
-  tenant       Tenant         @relation(fields: [tenantId], references: [id])
-  isVerified   Boolean        @default(false)
-  createdAt    DateTime       @default(now())
-  refreshTokens RefreshToken[]
-  auditLogs    AuditLog[]
-  apiKeys      ApiKey[]
+  id                      String                   @id @default(uuid())
+  email                   String                   @unique
+  name                    String?
+  avatarUrl               String?
+  password                String?
+  role                    Role                     @default(USER)
+  tokenVersion            Int                      @default(0)
+  tenantId                String
+  tenant                  Tenant                   @relation(fields: [tenantId], references: [id])
+  isVerified              Boolean                  @default(false)
+  createdAt               DateTime                 @default(now())
+  refreshTokens           RefreshToken[]
+  auditLogs               AuditLog[]
+  apiKeys                 ApiKey[]
   emailVerificationTokens EmailVerificationToken[]
-  passwordResetTokens      PasswordResetToken[]
+  passwordResetTokens     PasswordResetToken[]
+  socialAccounts          SocialAccount[]
 
   @@index([tenantId])
 }
 
+model SocialAccount {
+  id        String   @id @default(uuid())
+  provider  String
+  subject   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([provider, subject])
+  @@unique([userId, provider])
+}
+
 model RefreshToken {
-  id                String   @id @default(uuid())
-  token             String   @unique
+  id                String    @id @default(uuid())
+  token             String    @unique
   userId            String
-  user              User     @relation(fields: [userId], references: [id])
+  user              User      @relation(fields: [userId], references: [id])
   expiresAt         DateTime
-  createdAt         DateTime @default(now())
+  createdAt         DateTime  @default(now())
   revokedAt         DateTime?
   replacedByTokenId String?
   deviceId          String?
@@ -70,57 +87,57 @@ model RefreshToken {
 }
 
 model EmailVerificationToken {
-  id         String   @id @default(uuid())
-  token      String   @unique
+  id         String    @id @default(uuid())
+  token      String    @unique
   userId     String
-  user       User     @relation(fields: [userId], references: [id])
+  user       User      @relation(fields: [userId], references: [id])
   expiresAt  DateTime
-  createdAt  DateTime @default(now())
+  createdAt  DateTime  @default(now())
   consumedAt DateTime?
 
   @@index([userId])
 }
 
 model PasswordResetToken {
-  id         String   @id @default(uuid())
-  token      String   @unique
+  id         String    @id @default(uuid())
+  token      String    @unique
   userId     String
-  user       User     @relation(fields: [userId], references: [id])
+  user       User      @relation(fields: [userId], references: [id])
   expiresAt  DateTime
-  createdAt  DateTime @default(now())
+  createdAt  DateTime  @default(now())
   consumedAt DateTime?
 
   @@index([userId])
 }
 
 model AuditLog {
-  id        String      @id @default(uuid())
-  userId    String?
-  user      User?       @relation(fields: [userId], references: [id])
-  tenantId  String?
-  tenant    Tenant?     @relation(fields: [tenantId], references: [id])
-  action    AuditAction
-  ip        String?
+  id          String       @id @default(uuid())
+  userId      String?
+  user        User?        @relation(fields: [userId], references: [id])
+  tenantId    String?
+  tenant      Tenant?      @relation(fields: [tenantId], references: [id])
+  action      AuditAction
+  ip          String?
   environment Environment?
-  createdAt DateTime    @default(now())
+  createdAt   DateTime     @default(now())
 
   @@index([userId])
   @@index([tenantId])
 }
 
 model ApiKey {
-  id        String   @id @default(uuid())
-  key       String   @unique
-  name      String
-  services  String[]
-  last4     String?
-  userId    String
-  tenantId  String
-  user      User     @relation(fields: [userId], references: [id])
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  id          String      @id @default(uuid())
+  key         String      @unique
+  name        String
+  services    String[]
+  last4       String?
+  userId      String
+  tenantId    String
+  user        User        @relation(fields: [userId], references: [id])
+  tenant      Tenant      @relation(fields: [tenantId], references: [id])
   environment Environment @default(PRODUCTION)
-  createdAt DateTime @default(now())
-  revokedAt DateTime?
+  createdAt   DateTime    @default(now())
+  revokedAt   DateTime?
 
   @@index([userId])
   @@index([tenantId])
@@ -136,4 +153,18 @@ model Project {
 
   @@unique([tenantId, environment])
   @@index([tenantId])
+}
+
+model TenantInvitation {
+  id         String    @id @default(uuid())
+  email      String
+  token      String    @unique
+  tenantId   String
+  tenant     Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+  acceptedAt DateTime?
+
+  @@index([tenantId, email])
+  @@index([expiresAt])
 }
